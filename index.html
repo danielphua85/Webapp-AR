@@ -359,11 +359,27 @@ const API = (path, opts={}) => fetch(`${SUPA_URL}/rest/v1/${path}`, {
   ...opts
 });
 
-const STORAGE = (bucket, path, blob) => fetch(
-  `${SUPA_URL}/storage/v1/object/${bucket}/${path}`,
-  {method:'POST',headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,
-    'Content-Type':blob.type,'x-upsert':'true'},body:blob}
-);
+// XHR-based upload — more reliable on iOS Safari for large files
+function STORAGE(bucket, path, blob, onProgress) {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', `${SUPA_URL}/storage/v1/object/${bucket}/${path}`);
+    xhr.setRequestHeader('apikey', SUPA_KEY);
+    xhr.setRequestHeader('Authorization', 'Bearer ' + SUPA_KEY);
+    xhr.setRequestHeader('Content-Type', blob.type || 'application/octet-stream');
+    xhr.setRequestHeader('x-upsert', 'true');
+    if (onProgress) {
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable) onProgress(Math.round(e.loaded / e.total * 100));
+      };
+    }
+    xhr.onload = () => resolve({ ok: xhr.status >= 200 && xhr.status < 300, status: xhr.status, text: () => Promise.resolve(xhr.responseText) });
+    xhr.onerror = () => reject(new Error('Network error — check your connection'));
+    xhr.ontimeout = () => reject(new Error('Upload timed out — try a smaller file'));
+    xhr.timeout = 120000;
+    xhr.send(blob);
+  });
+}
 
 const STORAGE_DEL = (bucket, paths) => fetch(
   `${SUPA_URL}/storage/v1/object/${bucket}`,
@@ -706,7 +722,9 @@ async function savePair() {
 
     // Upload photo
     setUpProg(10, 'Uploading photo…');
-    const pr = await STORAGE(PHOTO_BUCKET, photoPath, chosenPhoto);
+    const pr = await STORAGE(PHOTO_BUCKET, photoPath, chosenPhoto, (pct) => {
+      setUpProg(10 + Math.round(pct * 0.35), `Uploading photo… ${pct}%`);
+    });
     if (!pr.ok) {
       const errText = await pr.text().catch(()=>'');
       let hint = '';
@@ -718,8 +736,10 @@ async function savePair() {
     const photoURL = `${SUPA_URL}/storage/v1/object/public/${PHOTO_BUCKET}/${photoPath}`;
 
     // Upload video
-    setUpProg(50, 'Uploading video… (may take a while)');
-    const vr = await STORAGE(VIDEO_BUCKET, videoPath, chosenVideo);
+    setUpProg(50, 'Uploading video… (may take a while for large files)');
+    const vr = await STORAGE(VIDEO_BUCKET, videoPath, chosenVideo, (pct) => {
+      setUpProg(50 + Math.round(pct * 0.35), `Uploading video… ${pct}%`);
+    });
     if (!vr.ok) {
       const errText = await vr.text().catch(()=>'');
       let hint = '';
