@@ -698,19 +698,36 @@ async function savePair() {
 
   try {
     const uid = Date.now();
-    const photoPath = `${uid}-${chosenPhoto.name.replace(/\s/g,'_')}`;
-    const videoPath = `${uid}-${chosenVideo.name.replace(/\s/g,'_')}`;
+    // Sanitise filename: remove spaces, special chars
+    const cleanPhotoName = chosenPhoto.name.replace(/[^a-zA-Z0-9._-]/g,'_');
+    const cleanVideoName = chosenVideo.name.replace(/[^a-zA-Z0-9._-]/g,'_');
+    const photoPath = `${uid}-${cleanPhotoName}`;
+    const videoPath = `${uid}-${cleanVideoName}`;
 
     // Upload photo
     setUpProg(10, 'Uploading photo…');
     const pr = await STORAGE(PHOTO_BUCKET, photoPath, chosenPhoto);
-    if (!pr.ok) throw new Error('Photo upload failed');
+    if (!pr.ok) {
+      const errText = await pr.text().catch(()=>'');
+      let hint = '';
+      if (pr.status === 400) hint = ' — Check storage bucket exists and is public';
+      else if (pr.status === 403) hint = ' — Storage policy not set. Run the SQL fix.';
+      else if (pr.status === 404) hint = ' — Bucket "ar-photos" not found. Create it in Supabase Storage.';
+      throw new Error(`Photo upload failed (${pr.status})${hint}`);
+    }
     const photoURL = `${SUPA_URL}/storage/v1/object/public/${PHOTO_BUCKET}/${photoPath}`;
 
     // Upload video
-    setUpProg(50, 'Uploading video…');
+    setUpProg(50, 'Uploading video… (may take a while)');
     const vr = await STORAGE(VIDEO_BUCKET, videoPath, chosenVideo);
-    if (!vr.ok) throw new Error('Video upload failed');
+    if (!vr.ok) {
+      const errText = await vr.text().catch(()=>'');
+      let hint = '';
+      if (vr.status === 403) hint = ' — Storage policy not set. Run the SQL fix.';
+      else if (vr.status === 404) hint = ' — Bucket "ar-videos" not found. Create it in Supabase Storage.';
+      else if (vr.status === 413) hint = ' — Video too large. Try a shorter/smaller video.';
+      throw new Error(`Video upload failed (${vr.status})${hint}`);
+    }
     const videoURL = `${SUPA_URL}/storage/v1/object/public/${VIDEO_BUCKET}/${videoPath}`;
 
     // Compile mind data
@@ -751,7 +768,7 @@ async function savePair() {
     renderAdminList();
 
   } catch(e) {
-    showToast(e.message, 'err');
+    showToast(e.message, 'err', true);
     console.error(e);
   } finally {
     btn.disabled = false;
@@ -854,12 +871,16 @@ function base64ToBuffer(b64) {
 }
 
 let toastTimer;
-function showToast(msg, type='') {
+function showToast(msg, type='', long=false) {
   const t = document.getElementById('toast');
   t.textContent = msg;
   t.className = 'show ' + type;
+  t.style.whiteSpace = long ? 'normal' : 'nowrap';
+  t.style.maxWidth = long ? '90vw' : '';
+  t.style.textAlign = long ? 'center' : '';
+  t.style.padding = long ? '12px 20px' : '';
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.className = '', 3000);
+  toastTimer = setTimeout(() => t.className = '', long ? 6000 : 3000);
 }
 </script>
 
