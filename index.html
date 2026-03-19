@@ -6,143 +6,157 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta http-equiv="Content-Security-Policy" content="default-src * 'self' 'unsafe-inline' 'unsafe-eval' data: blob:; connect-src *; img-src * data: blob:; media-src * blob:; script-src * 'unsafe-inline' 'unsafe-eval'; style-src * 'unsafe-inline';">
-<title>AR Magic Library v5</title>
+<title>AR Magic Library</title>
 <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image.prod.js"></script>
 <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&family=Inter:wght@400;500;600&display=swap');
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 :root{
-  --gold:#c8a84b;--dark:#090909;--card:#131313;--card2:#1a1a1a;
-  --border:rgba(200,168,75,0.18);--border2:rgba(200,168,75,0.08);
-  --text:#e8dfc8;--muted:rgba(232,223,200,0.42);--green:#4caf50;--red:#ef5350;
+  --primary:#2563eb;--primary-light:#3b82f6;--primary-dark:#1d4ed8;
+  --bg:#f0f4ff;--bg2:#ffffff;--card:#ffffff;--card2:#f8faff;
+  --border:#dbe4ff;--border2:#e8eeff;
+  --text:#1e293b;--muted:#64748b;--muted2:#94a3b8;
+  --green:#16a34a;--green-bg:#dcfce7;
+  --red:#dc2626;--red-bg:#fee2e2;
+  --gold:#f59e0b;--gold-bg:#fef3c7;
+  --shadow:0 1px 3px rgba(0,0,0,0.08),0 4px 12px rgba(37,99,235,0.08);
+  --shadow2:0 2px 8px rgba(37,99,235,0.15);
 }
-html,body{height:100%;overflow:hidden;background:var(--dark);color:var(--text);font-family:'DM Mono',monospace;}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;}
 
-/* ── SCREENS ── */
 .screen{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;z-index:100;overflow-y:auto;}
 .screen.hidden{display:none!important;}
 
 /* ── TOPBAR ── */
-.topbar{width:100%;padding:13px 18px;background:rgba(9,9,9,0.97);
+.topbar{width:100%;padding:14px 18px;background:#fff;
 border-bottom:1px solid var(–border);display:flex;align-items:center;
 justify-content:space-between;flex-shrink:0;position:sticky;top:0;z-index:50;
-backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);}
-.logo{font-family:‘Syne’,sans-serif;font-size:17px;font-weight:800;
-color:var(–gold);letter-spacing:.5px;display:flex;align-items:center;gap:8px;}
-.logo-sub{font-size:10px;font-weight:600;color:var(–muted);letter-spacing:2px;text-transform:uppercase;}
+box-shadow:0 1px 4px rgba(37,99,235,0.07);}
+.logo{font-family:‘Nunito’,sans-serif;font-size:18px;font-weight:900;
+color:var(–primary);display:flex;align-items:center;gap:8px;}
+.logo-badge{background:var(–primary);color:#fff;font-size:9px;font-weight:700;
+padding:2px 7px;border-radius:20px;letter-spacing:.5px;text-transform:uppercase;}
+.logo-sub{font-size:10px;font-weight:600;color:var(–muted);letter-spacing:1.5px;text-transform:uppercase;margin-top:1px;}
 .topbar-btns{display:flex;gap:8px;}
-.tb-btn{padding:7px 13px;border-radius:3px;font-family:‘DM Mono’,monospace;
-font-size:11px;letter-spacing:1px;cursor:pointer;border:1px solid var(–border);
-background:transparent;color:var(–gold);transition:background .2s;-webkit-appearance:none;}
-.tb-btn:hover{background:rgba(200,168,75,0.1);}
-.tb-btn.primary{background:var(–gold);color:#000;border-color:var(–gold);font-weight:600;}
+.tb-btn{padding:8px 16px;border-radius:8px;font-family:‘Inter’,monospace;
+font-size:12px;font-weight:600;cursor:pointer;border:1.5px solid var(–border);
+background:#fff;color:var(–primary);transition:all .15s;-webkit-appearance:none;}
+.tb-btn:active{background:var(–bg);}
+.tb-btn.primary{background:var(–primary);color:#fff;border-color:var(–primary);}
+.tb-btn.primary:active{background:var(–primary-dark);}
 
 /* ── WRAP ── */
-.wrap{width:100%;max-width:520px;padding:20px 15px 60px;display:flex;flex-direction:column;gap:14px;}
+.wrap{width:100%;max-width:520px;padding:18px 15px 80px;display:flex;flex-direction:column;gap:14px;}
 
-/* ── SEARCH + FILTER ── */
+/* ── SEARCH ── */
 .search-bar{display:flex;gap:8px;}
-.search-input{flex:1;padding:10px 14px;background:var(–card);border:1px solid var(–border);
-border-radius:4px;color:var(–text);font-family:‘DM Mono’,monospace;font-size:12px;outline:none;}
-.search-input::placeholder{color:var(–muted);}
-.search-input:focus{border-color:rgba(200,168,75,0.45);}
-.filter-select{padding:10px 10px;background:var(–card);border:1px solid var(–border);
-border-radius:4px;color:var(–text);font-family:‘DM Mono’,monospace;font-size:11px;
-outline:none;cursor:pointer;min-width:110px;}
-.filter-select option{background:var(–card);}
+.search-input{flex:1;padding:11px 14px;background:#fff;border:1.5px solid var(–border);
+border-radius:10px;color:var(–text);font-family:‘Inter’,sans-serif;font-size:13px;outline:none;
+box-shadow:var(–shadow);}
+.search-input:focus{border-color:var(–primary-light);box-shadow:0 0 0 3px rgba(59,130,246,0.12);}
+.search-input::placeholder{color:var(–muted2);}
+.filter-select{padding:11px 10px;background:#fff;border:1.5px solid var(–border);
+border-radius:10px;color:var(–text);font-family:‘Inter’,sans-serif;font-size:12px;
+outline:none;cursor:pointer;min-width:110px;box-shadow:var(–shadow);-webkit-appearance:none;}
 
-/* ── EMPTY STATE ── */
-.empty-state{text-align:center;padding:60px 20px;color:var(–muted);}
-.empty-state svg{opacity:.2;margin-bottom:16px;}
-.empty-state p{font-size:13px;line-height:1.8;}
-.empty-state strong{color:var(–gold);}
+/* ── EMPTY ── */
+.empty-state{text-align:center;padding:50px 20px;color:var(–muted);}
+.empty-state svg{opacity:.25;margin-bottom:14px;}
+.empty-state p{font-size:14px;line-height:1.8;}
+.empty-state strong{color:var(–primary);}
 
-/* ── GRID ── */
+/* ── PAIR CARDS ── */
 .pairs-grid{display:flex;flex-direction:column;gap:12px;}
-
-/* ── PAIR CARD ── */
-.pair-card{background:var(–card);border:1px solid var(–border);border-radius:8px;
-overflow:hidden;cursor:pointer;transition:border-color .2s,transform .15s;
-display:flex;align-items:stretch;}
-.pair-card:active{transform:scale(.98);}
-.pair-card:hover{border-color:rgba(200,168,75,0.4);}
-.pair-thumb{width:90px;min-width:90px;object-fit:cover;background:#111;display:block;}
-.pair-thumb-placeholder{width:90px;min-width:90px;background:var(–card2);
-display:flex;align-items:center;justify-content:center;opacity:.3;}
-.pair-info{padding:14px 14px 12px;flex:1;display:flex;flex-direction:column;gap:5px;}
-.pair-cat{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(–gold);opacity:.7;}
-.pair-title{font-family:‘Syne’,sans-serif;font-size:14px;font-weight:700;color:var(–text);line-height:1.3;}
+.pair-card{background:#fff;border:1.5px solid var(–border);border-radius:14px;
+overflow:hidden;cursor:pointer;transition:all .15s;display:flex;
+box-shadow:var(–shadow);}
+.pair-card:active{transform:scale(.98);box-shadow:none;}
+.pair-card:hover{border-color:var(–primary-light);box-shadow:var(–shadow2);}
+.pair-thumb{width:88px;min-width:88px;object-fit:cover;background:var(–bg);}
+.pair-thumb-ph{width:88px;min-width:88px;background:var(–bg2);
+display:flex;align-items:center;justify-content:center;color:var(–muted2);}
+.pair-info{padding:13px 14px 11px;flex:1;display:flex;flex-direction:column;gap:4px;}
+.pair-cat{display:inline-block;padding:2px 8px;border-radius:20px;
+background:var(–gold-bg);color:#92400e;font-size:10px;font-weight:700;
+letter-spacing:.5px;text-transform:uppercase;width:fit-content;}
+.pair-title{font-family:‘Nunito’,sans-serif;font-size:15px;font-weight:800;
+color:var(–text);line-height:1.3;margin-top:2px;}
 .pair-desc{font-size:11px;color:var(–muted);line-height:1.5;
 overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
 .pair-footer{display:flex;align-items:center;justify-content:space-between;margin-top:6px;}
-.pair-date{font-size:10px;color:var(–muted);}
-.play-chip{padding:4px 10px;border-radius:20px;background:rgba(200,168,75,0.12);
-border:1px solid rgba(200,168,75,0.3);color:var(–gold);font-size:10px;
-letter-spacing:1px;display:flex;align-items:center;gap:5px;}
+.pair-date{font-size:10px;color:var(–muted2);}
+.play-chip{display:flex;align-items:center;gap:5px;padding:5px 12px;border-radius:20px;
+background:var(–primary);color:#fff;font-size:11px;font-weight:600;}
 
-/* ── MODALS ── */
-.modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.75);
-z-index:500;display:flex;align-items:flex-end;justify-content:center;}
+/* ── MODAL ── */
+.modal-backdrop{position:fixed;inset:0;background:rgba(15,23,42,0.5);
+z-index:500;display:flex;align-items:flex-end;justify-content:center;
+backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);}
 .modal-backdrop.hidden{display:none!important;}
-.modal{width:100%;max-width:520px;background:var(–card);border-radius:14px 14px 0 0;
-border-top:1px solid var(–border);padding:24px 20px 40px;max-height:92vh;overflow-y:auto;}
-.modal-handle{width:36px;height:3px;background:rgba(200,168,75,0.25);border-radius:2px;
-margin:0 auto 20px;}
-.modal-title{font-family:‘Syne’,sans-serif;font-size:17px;font-weight:800;
-margin-bottom:18px;color:var(–text);}
+.modal{width:100%;max-width:520px;background:#fff;border-radius:20px 20px 0 0;
+padding:20px 18px 44px;max-height:92vh;overflow-y:auto;
+box-shadow:0 -8px 32px rgba(0,0,0,0.15);}
+.modal-handle{width:40px;height:4px;background:var(–border);border-radius:2px;margin:0 auto 18px;}
+.modal-title{font-family:‘Nunito’,sans-serif;font-size:19px;font-weight:900;
+color:var(–text);margin-bottom:18px;}
 
-/* form fields */
 .field{display:flex;flex-direction:column;gap:6px;margin-bottom:14px;}
-.field label{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(–gold);}
+.field label{font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(–muted);}
 .field input,.field textarea,.field select{
-padding:11px 13px;background:var(–card2);border:1px solid var(–border);
-border-radius:4px;color:var(–text);font-family:‘DM Mono’,monospace;font-size:12px;
+padding:12px 14px;background:var(–bg2);border:1.5px solid var(–border);
+border-radius:10px;color:var(–text);font-family:‘Inter’,sans-serif;font-size:13px;
 outline:none;width:100%;-webkit-appearance:none;}
-.field textarea{resize:vertical;min-height:72px;line-height:1.6;}
-.field input:focus,.field textarea:focus,.field select:focus{border-color:rgba(200,168,75,.5);}
-.field select option{background:var(–card);}
+.field input:focus,.field textarea:focus{border-color:var(–primary-light);
+box-shadow:0 0 0 3px rgba(59,130,246,0.1);}
+.field textarea{resize:vertical;min-height:70px;line-height:1.6;}
 
-.upload-btn-row{display:flex;gap:8px;}
-.upload-file-btn{flex:1;padding:11px 10px;border:1.5px dashed var(–border);border-radius:4px;
-background:transparent;color:var(–muted);font-family:‘DM Mono’,monospace;font-size:11px;
-cursor:pointer;text-align:center;transition:border-color .2s;-webkit-appearance:none;}
-.upload-file-btn.chosen{border-color:var(–green);color:var(–green);}
-.upload-file-btn:hover{border-color:var(–gold);}
+.file-row{display:flex;gap:8px;flex-direction:column;gap:10px;}
+.file-pick-btn{display:flex;align-items:center;gap:10px;padding:13px 14px;
+border:1.5px dashed var(–border);border-radius:10px;background:var(–bg2);
+color:var(–muted);font-family:‘Inter’,sans-serif;font-size:12px;font-weight:500;
+cursor:pointer;transition:all .15s;-webkit-appearance:none;width:100%;text-align:left;}
+.file-pick-btn:active,.file-pick-btn:hover{border-color:var(–primary-light);background:#f0f6ff;color:var(–primary);}
+.file-pick-btn.chosen{border-color:var(–green);background:var(–green-bg);color:var(–green);border-style:solid;}
+.file-pick-btn .fp-icon{font-size:18px;flex-shrink:0;}
+.file-pick-btn .fp-label{flex:1;}
+.file-pick-btn .fp-size{font-size:10px;color:var(–muted2);margin-top:1px;}
+
 input[type=file]{display:none;}
 
+/* progress */
+.upload-prog-wrap{display:none;flex-direction:column;gap:8px;
+background:var(–bg2);border:1px solid var(–border);border-radius:10px;padding:14px;}
+.upload-prog-wrap.show{display:flex;}
+.prog-label{font-size:12px;font-weight:600;color:var(–text);}
+.prog-sub{font-size:11px;color:var(–muted);}
+.prog-track{height:6px;background:var(–border);border-radius:3px;overflow:hidden;}
+.prog-fill{height:100%;background:var(–primary);border-radius:3px;width:0%;transition:width .3s;}
+.prog-pct{font-size:11px;font-weight:600;color:var(–primary);text-align:right;}
+
 .modal-btns{display:flex;gap:10px;margin-top:18px;}
-.modal-btn{flex:1;padding:13px;border-radius:4px;font-family:‘Syne’,sans-serif;
-font-weight:700;font-size:13px;letter-spacing:1.5px;text-transform:uppercase;
-cursor:pointer;-webkit-appearance:none;border:none;transition:opacity .2s;}
-.modal-btn.cancel{background:var(–card2);color:var(–muted);border:1px solid var(–border);}
-.modal-btn.save{background:var(–gold);color:#000;}
-.modal-btn:disabled{opacity:.4;cursor:not-allowed;}
+.modal-btn{flex:1;padding:14px;border-radius:12px;font-family:‘Nunito’,sans-serif;
+font-weight:800;font-size:14px;cursor:pointer;-webkit-appearance:none;border:none;transition:all .15s;}
+.modal-btn.cancel{background:var(–bg2);color:var(–muted);border:1.5px solid var(–border);}
+.modal-btn.save{background:var(–primary);color:#fff;}
+.modal-btn.save:active{background:var(–primary-dark);}
+.modal-btn:disabled{opacity:.45;cursor:not-allowed;}
 
-/* delete btn */
-.delete-btn{padding:7px 12px;background:transparent;border:1px solid rgba(239,83,80,0.3);
-border-radius:3px;color:var(–red);font-size:10px;letter-spacing:1px;
-cursor:pointer;-webkit-appearance:none;transition:background .2s;}
-.delete-btn:hover{background:rgba(239,83,80,0.08);}
-
-/* progress inside modal */
-.upload-progress{display:none;flex-direction:column;gap:8px;padding:12px 0;}
-.upload-progress.show{display:flex;}
-.up-bar-bg{height:3px;background:rgba(200,168,75,0.12);border-radius:2px;overflow:hidden;}
-.up-bar-fill{height:100%;background:var(–gold);width:0%;border-radius:2px;transition:width .3s;}
-.up-msg{font-size:11px;color:var(–muted);}
+.delete-btn{padding:6px 12px;background:var(–red-bg);border:none;
+border-radius:6px;color:var(–red);font-size:11px;font-weight:600;
+cursor:pointer;-webkit-appearance:none;}
 
 /* ── LOADING SCREEN ── */
-#s-loading{background:var(–dark);justify-content:center;align-items:center;gap:18px;padding:40px;}
-.spinner{width:56px;height:56px;border-radius:50%;border:2.5px solid transparent;
-border-top-color:var(–gold);animation:spin .85s linear infinite;}
+#s-loading{background:#fff;justify-content:center;align-items:center;gap:20px;padding:40px;}
+.spinner{width:52px;height:52px;border-radius:50%;border:3px solid var(–border);
+border-top-color:var(–primary);animation:spin .8s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg);}}
-.load-title{font-family:‘Syne’,sans-serif;font-size:18px;font-weight:800;}
-.load-msg{font-size:12px;color:var(–muted);text-align:center;max-width:260px;line-height:1.7;}
-.prog-track{width:220px;height:3px;background:rgba(200,168,75,0.1);border-radius:2px;overflow:hidden;}
-.prog-bar{height:100%;background:var(–gold);width:0%;border-radius:2px;transition:width .3s;}
-#load-pct{font-size:11px;color:var(–gold);}
+.load-title{font-family:‘Nunito’,sans-serif;font-size:20px;font-weight:900;color:var(–text);}
+.load-msg{font-size:13px;color:var(–muted);text-align:center;max-width:260px;line-height:1.7;}
+.load-track{width:240px;height:6px;background:var(–border);border-radius:3px;overflow:hidden;}
+.load-bar{height:100%;background:var(–primary);border-radius:3px;width:0%;transition:width .3s;}
+#load-pct{font-size:12px;font-weight:700;color:var(–primary);}
 
 /* ── AR SCREEN ── */
 #s-ar{background:#000;z-index:200;}
@@ -151,66 +165,75 @@ border-top-color:var(–gold);animation:spin .85s linear infinite;}
 #ar-hud{position:fixed;inset:0;z-index:300;pointer-events:none;}
 #scan-box{position:absolute;top:50%;left:50%;transform:translate(-50%,-56%);
 width:min(66vw,230px);aspect-ratio:1.5;}
-.sc{position:absolute;width:18px;height:18px;border-color:var(–gold);border-style:solid;}
-.sc.tl{top:0;left:0;border-width:2px 0 0 2px;}
-.sc.tr{top:0;right:0;border-width:2px 2px 0 0;}
-.sc.bl{bottom:0;left:0;border-width:0 0 2px 2px;}
-.sc.br{bottom:0;right:0;border-width:0 2px 2px 0;}
+.sc{position:absolute;width:22px;height:22px;border-color:#fff;border-style:solid;}
+.sc.tl{top:0;left:0;border-width:3px 0 0 3px;}
+.sc.tr{top:0;right:0;border-width:3px 3px 0 0;}
+.sc.bl{bottom:0;left:0;border-width:0 0 3px 3px;}
+.sc.br{bottom:0;right:0;border-width:0 3px 3px 0;}
 #beam{position:absolute;left:0;right:0;height:2px;top:0;
-background:linear-gradient(90deg,transparent,var(–gold),transparent);
+background:linear-gradient(90deg,transparent,rgba(255,255,255,0.8),transparent);
 animation:beamscan 2s ease-in-out infinite;}
 @keyframes beamscan{0%,100%{top:0;opacity:0;}8%{opacity:1;}92%{opacity:1;}50%{top:100%;}}
-#ar-title-hud{position:fixed;top:18px;left:18px;font-size:10px;
-letter-spacing:1.5px;text-transform:uppercase;color:rgba(200,168,75,.6);line-height:1.9;}
-#status-pill{position:fixed;bottom:24%;left:50%;transform:translateX(-50%);
-padding:8px 20px;border-radius:30px;border:1px solid rgba(200,168,75,0.3);
-background:rgba(9,9,9,0.8);font-size:11px;letter-spacing:1.5px;text-transform:uppercase;
-color:var(–gold);white-space:nowrap;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+#ar-title-hud{position:fixed;top:20px;left:20px;font-size:11px;font-weight:600;
+letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,0.7);line-height:1.9;}
+#status-pill{position:fixed;bottom:22%;left:50%;transform:translateX(-50%);
+padding:10px 24px;border-radius:30px;
+background:rgba(255,255,255,0.92);color:var(–text);
+font-size:12px;font-weight:700;white-space:nowrap;
+box-shadow:0 4px 20px rgba(0,0,0,0.3);
 pointer-events:none;z-index:301;transition:all .3s;}
-#status-pill.found{border-color:var(–green);background:rgba(0,50,10,0.85);color:#81c784;}
-#btn-ar-back{pointer-events:all;position:fixed;top:14px;right:14px;z-index:305;
-background:rgba(9,9,9,0.8);border:1px solid var(–border);color:var(–gold);
-font-family:‘DM Mono’,monospace;font-size:11px;letter-spacing:1px;padding:8px 14px;
-border-radius:3px;cursor:pointer;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
--webkit-appearance:none;}
+#status-pill.found{background:var(–green);color:#fff;}
+#btn-ar-back{pointer-events:all;position:fixed;top:16px;right:16px;z-index:305;
+background:rgba(255,255,255,0.9);border:none;color:var(–text);
+font-family:‘Inter’,sans-serif;font-size:12px;font-weight:700;
+padding:9px 16px;border-radius:20px;cursor:pointer;
+box-shadow:0 2px 8px rgba(0,0,0,0.2);-webkit-appearance:none;}
 
-/* ── ADMIN LOGIN ── */
-#s-admin-login{background:var(–dark);justify-content:center;align-items:center;padding:40px 20px;}
-.login-box{width:100%;max-width:340px;background:var(–card);border:1px solid var(–border);
-border-radius:8px;padding:32px 24px;display:flex;flex-direction:column;gap:18px;}
-.login-title{font-family:‘Syne’,sans-serif;font-size:18px;font-weight:800;text-align:center;}
-.login-sub{font-size:11px;color:var(–muted);text-align:center;line-height:1.7;margin-top:-8px;}
-.login-error{font-size:11px;color:var(–red);text-align:center;display:none;}
+/* ── LOGIN ── */
+#s-admin-login{background:var(–bg);justify-content:center;align-items:center;padding:20px;}
+.login-box{width:100%;max-width:340px;background:#fff;border:1.5px solid var(–border);
+border-radius:20px;padding:32px 24px;display:flex;flex-direction:column;gap:16px;
+box-shadow:var(–shadow2);}
+.login-title{font-family:‘Nunito’,sans-serif;font-size:20px;font-weight:900;text-align:center;color:var(–text);}
+.login-icon{text-align:center;font-size:40px;margin-bottom:-4px;}
+.login-error{font-size:12px;color:var(–red);text-align:center;
+background:var(–red-bg);padding:8px;border-radius:8px;display:none;}
 .login-error.show{display:block;}
 
-/* toast */
-#toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(20px);
-padding:10px 22px;border-radius:30px;background:var(–card);border:1px solid var(–border);
-font-size:12px;color:var(–text);opacity:0;transition:all .3s;z-index:9999;
-white-space:nowrap;pointer-events:none;}
+/* ── ADMIN ── */
+#s-admin{background:var(–bg);}
+.debug-card{background:#fff;border:1.5px solid var(–border);border-radius:12px;
+padding:14px 16px;font-size:12px;color:var(–muted);line-height:1.9;}
+.debug-head{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;
+color:var(–muted);margin-bottom:6px;}
+
+/* ── TOAST ── */
+#toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(16px);
+padding:12px 24px;border-radius:30px;background:var(–text);color:#fff;
+font-size:13px;font-weight:600;opacity:0;transition:all .3s;z-index:9999;
+white-space:nowrap;pointer-events:none;box-shadow:0 4px 16px rgba(0,0,0,0.2);}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
-#toast.ok{border-color:var(–green);color:var(–green);}
-#toast.err{border-color:var(–red);color:var(–red);}
+#toast.ok{background:var(–green);}
+#toast.err{background:var(–red);white-space:normal;max-width:88vw;text-align:center;}
 </style>
 
 </head>
 <body>
 
-<!-- ════ SCREEN: LIBRARY ════ -->
+<!-- ═══ LIBRARY ═══ -->
 
 <div id="s-library" class="screen">
   <div class="topbar">
     <div>
-      <div class="logo">⬡ AR Magic</div>
-      <div class="logo-sub">Library</div>
+      <div class="logo">📸 AR Magic <span class="logo-badge">Library</span></div>
     </div>
     <div class="topbar-btns">
-      <button class="tb-btn" onclick="showScreen('s-admin-login')">Admin</button>
+      <button class="tb-btn" onclick="showScreen('s-admin-login')">🔐 Admin</button>
     </div>
   </div>
   <div class="wrap">
     <div class="search-bar">
-      <input class="search-input" id="search-inp" placeholder="Search title or category…" oninput="renderLibrary()">
+      <input class="search-input" id="search-inp" placeholder="🔍 Search title or category…" oninput="renderLibrary()">
       <select class="filter-select" id="cat-filter" onchange="renderLibrary()">
         <option value="">All</option>
       </select>
@@ -219,33 +242,34 @@ white-space:nowrap;pointer-events:none;}
   </div>
 </div>
 
-<!-- ════ SCREEN: ADMIN LOGIN ════ -->
+<!-- ═══ ADMIN LOGIN ═══ -->
 
 <div id="s-admin-login" class="screen hidden">
   <div class="topbar">
-    <div class="logo">⬡ Admin</div>
+    <div class="logo">🔐 Admin Login</div>
     <button class="tb-btn" onclick="showScreen('s-library')">← Back</button>
   </div>
   <div style="display:flex;justify-content:center;align-items:center;flex:1;padding:20px;width:100%;">
     <div class="login-box">
+      <div class="login-icon">🔑</div>
       <div class="login-title">Admin Access</div>
-      <div class="login-sub">Enter password to manage AR pairs</div>
       <div class="field">
         <label>Password</label>
-        <input type="password" id="pw-input" placeholder="Enter password" onkeydown="if(event.key==='Enter')doLogin()">
+        <input type="password" id="pw-input" placeholder="Enter password"
+          onkeydown="if(event.key==='Enter')doLogin()">
       </div>
-      <div class="login-error" id="login-err">Incorrect password</div>
-      <button class="modal-btn save" onclick="doLogin()">Unlock Admin</button>
+      <div class="login-error" id="login-err">❌ Incorrect password. Try again.</div>
+      <button class="modal-btn save" onclick="doLogin()">Unlock →</button>
     </div>
   </div>
 </div>
 
-<!-- ════ SCREEN: ADMIN PANEL ════ -->
+<!-- ═══ ADMIN PANEL ═══ -->
 
 <div id="s-admin" class="screen hidden">
   <div class="topbar">
     <div>
-      <div class="logo">⬡ Admin Panel</div>
+      <div class="logo">⚙️ Admin Panel</div>
       <div class="logo-sub">Manage AR Pairs</div>
     </div>
     <div class="topbar-btns">
@@ -254,46 +278,46 @@ white-space:nowrap;pointer-events:none;}
     </div>
   </div>
   <div class="wrap">
-    <div id="debug-card" class="card" style="font-size:11px;color:var(--muted);line-height:1.8;">
-      <div class="card-head">Connection Status</div>
-      <div id="debug-info">Checking...</div>
+    <div class="debug-card">
+      <div class="debug-head">Connection Status</div>
+      <div id="debug-info">Checking…</div>
     </div>
     <div id="admin-list" class="pairs-grid"></div>
   </div>
 </div>
 
-<!-- ════ SCREEN: COMPILING ════ -->
+<!-- ═══ COMPILING/LOADING ═══ -->
 
 <div id="s-loading" class="screen hidden">
   <div class="spinner"></div>
-  <div class="load-title" id="load-title">Compiling…</div>
-  <div class="load-msg" id="load-msg">Analysing image and building AR target…</div>
-  <div class="prog-track"><div class="prog-bar" id="prog-bar"></div></div>
+  <div class="load-title" id="load-title">Please wait…</div>
+  <div class="load-msg" id="load-msg">Processing your files…</div>
+  <div class="load-track"><div class="load-bar" id="load-bar"></div></div>
   <div id="load-pct">0%</div>
 </div>
 
-<!-- ════ SCREEN: AR ════ -->
+<!-- ═══ AR ═══ -->
 
 <div id="s-ar" class="screen hidden">
   <div id="ar-wrap"></div>
   <div id="ar-hud">
-    <div id="ar-title-hud">⬡ AR MAGIC<br><span id="hud-state">SCANNING…</span></div>
+    <div id="ar-title-hud">📸 AR Magic<br><span id="hud-state">SCANNING…</span></div>
     <div id="scan-box">
       <div class="sc tl"></div><div class="sc tr"></div>
       <div class="sc bl"></div><div class="sc br"></div>
       <div id="beam"></div>
     </div>
   </div>
-  <div id="status-pill">🔍 Point at your photo</div>
+  <div id="status-pill">🔍 Point camera at your photo</div>
   <button id="btn-ar-back" onclick="stopAR()">✕ Back</button>
 </div>
 
-<!-- ════ MODAL: ADD/EDIT PAIR ════ -->
+<!-- ═══ MODAL: ADD PAIR ═══ -->
 
 <div class="modal-backdrop hidden" id="modal-add">
   <div class="modal">
     <div class="modal-handle"></div>
-    <div class="modal-title" id="modal-add-title">Add AR Pair</div>
+    <div class="modal-title" id="modal-add-title">➕ Add AR Pair</div>
 
 ```
 <div class="field">
@@ -305,40 +329,53 @@ white-space:nowrap;pointer-events:none;}
   <input type="text" id="f-cat" placeholder="e.g. Family, Seniors Workout, Leisure">
 </div>
 <div class="field">
-  <label>Description</label>
-  <textarea id="f-desc" placeholder="Optional note…"></textarea>
-</div>
-<div class="field">
-  <label>Target Photo *</label>
-  <div class="upload-btn-row">
-    <button class="upload-file-btn" id="btn-photo" onclick="document.getElementById('inp-photo').click()">📷 Choose Photo</button>
-    <input type="file" id="inp-photo" accept="image/*" onchange="fileChosen('photo',this)">
-    <button class="upload-file-btn" id="btn-video" onclick="document.getElementById('inp-video').click()">🎬 Choose Video</button>
-    <input type="file" id="inp-video" accept="video/*" onchange="fileChosen('video',this)">
-  </div>
+  <label>Description (optional)</label>
+  <textarea id="f-desc" placeholder="Short note about this AR pair…"></textarea>
 </div>
 
-<div class="upload-progress" id="upload-prog">
-  <div class="up-bar-bg"><div class="up-bar-fill" id="up-fill"></div></div>
-  <div class="up-msg" id="up-msg">Uploading…</div>
+<div class="field">
+  <label>Target Photo *</label>
+  <button class="file-pick-btn" id="btn-photo" onclick="document.getElementById('inp-photo').click()">
+    <span class="fp-icon">📷</span>
+    <div class="fp-label">Tap to choose photo<div class="fp-size" id="photo-size"></div></div>
+  </button>
+  <input type="file" id="inp-photo" accept="image/*" onchange="fileChosen('photo',this)">
+</div>
+
+<div class="field">
+  <label>Video to Play *</label>
+  <button class="file-pick-btn" id="btn-video" onclick="document.getElementById('inp-video').click()">
+    <span class="fp-icon">🎬</span>
+    <div class="fp-label">Tap to choose video<div class="fp-size" id="video-size"></div></div>
+  </button>
+  <input type="file" id="inp-video" accept="video/*" onchange="fileChosen('video',this)">
+</div>
+
+<div class="upload-prog-wrap" id="upload-prog">
+  <div class="prog-label" id="prog-label">Uploading…</div>
+  <div class="prog-sub" id="prog-sub"></div>
+  <div class="prog-track"><div class="prog-fill" id="prog-fill"></div></div>
+  <div class="prog-pct" id="prog-pct">0%</div>
 </div>
 
 <div class="modal-btns">
   <button class="modal-btn cancel" onclick="closeAddModal()">Cancel</button>
-  <button class="modal-btn save" id="btn-save-pair" onclick="savePair()">Save</button>
+  <button class="modal-btn save" id="btn-save-pair" onclick="savePair()">Save ✓</button>
 </div>
 ```
 
   </div>
 </div>
 
-<!-- ════ MODAL: DELETE CONFIRM ════ -->
+<!-- ═══ MODAL: DELETE ═══ -->
 
 <div class="modal-backdrop hidden" id="modal-del">
-  <div class="modal" style="padding-bottom:32px;">
+  <div class="modal" style="padding-bottom:32px">
     <div class="modal-handle"></div>
-    <div class="modal-title">Delete this pair?</div>
-    <p style="font-size:12px;color:var(--muted);line-height:1.7;margin-bottom:20px;">This will permanently remove the photo, video, and AR data. Cannot be undone.</p>
+    <div class="modal-title">🗑 Delete this pair?</div>
+    <p style="font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:20px;">
+      This permanently removes the photo, video and AR data. Cannot be undone.
+    </p>
     <div class="modal-btns">
       <button class="modal-btn cancel" onclick="closeDelModal()">Cancel</button>
       <button class="modal-btn save" style="background:var(--red)" onclick="confirmDelete()">Delete</button>
@@ -349,169 +386,127 @@ white-space:nowrap;pointer-events:none;}
 <div id="toast"></div>
 
 <script>
-// ══════════════════════════════════════
+// ══════════════════════════════
 // CONFIG
-// ══════════════════════════════════════
-const SUPA_URL = 'https://phtxvaxdfgpvghvhvoyr.supabase.co';
-const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBodHh2YXhkZmdwdmdodmh2b3lyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM4NDI5MzUsImV4cCI6MjA4OTQxODkzNX0.Y1EizV1-y0MnsxBjxOpg74HY14G_SF19zg1evpdpu3M';
-const ADMIN_PW = 'Phuapengming45679';
-const PHOTO_BUCKET = 'ar-photos';
-const VIDEO_BUCKET = 'ar-videos';
+// ══════════════════════════════
+const SUPA_URL  = 'https://phtxvaxdfgpvghvhvoyr.supabase.co';
+const SUPA_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBodHh2YXhkZmdwdmdodmh2b3lyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM4NDI5MzUsImV4cCI6MjA4OTQxODkzNX0.Y1EizV1-y0MnsxBjxOpg74HY14G_SF19zg1evpdpu3M';
+const ADMIN_PW  = 'Phuapengming45679';
+const PH_BUCKET = 'ar-photos';
+const VD_BUCKET = 'ar-videos';
 
+// ── REST API helper ──
 const API = (path, opts={}) => fetch(`${SUPA_URL}/rest/v1/${path}`, {
-  headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,
-    'Content-Type':'application/json','Prefer':'return=representation',...(opts.headers||{})},
-  ...opts
+  headers:{
+    'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,
+    'Content-Type':'application/json','Prefer':'return=representation',
+    ...(opts.headers||{})
+  }, ...opts
 });
 
-// XHR-based upload with ArrayBuffer conversion for iOS Safari
-function STORAGE(bucket, path, blob, onProgress) {
+// ── Storage upload via XHR with progress + ArrayBuffer (iOS Safari fix) ──
+function uploadFile(bucket, path, file, onProgress) {
   return new Promise((resolve, reject) => {
-    // Read file as ArrayBuffer first - fixes iOS Safari binary upload issues
     const reader = new FileReader();
+    reader.onerror = () => reject(new Error('Could not read file'));
     reader.onload = (e) => {
-      const buffer = e.target.result;
       const xhr = new XMLHttpRequest();
       xhr.open('POST', `${SUPA_URL}/storage/v1/object/${bucket}/${path}`);
       xhr.setRequestHeader('apikey', SUPA_KEY);
       xhr.setRequestHeader('Authorization', 'Bearer ' + SUPA_KEY);
-      xhr.setRequestHeader('Content-Type', blob.type || 'application/octet-stream');
+      xhr.setRequestHeader('Content-Type', file.type || 'application/octet-stream');
       xhr.setRequestHeader('x-upsert', 'true');
-      xhr.upload.onprogress = (e) => {
-        if (e.lengthComputable && onProgress) onProgress(Math.round(e.loaded / e.total * 100));
+      xhr.timeout = 300000; // 5 minutes
+      xhr.upload.onprogress = (ev) => {
+        if (ev.lengthComputable && onProgress)
+          onProgress(Math.round(ev.loaded / ev.total * 100));
       };
       xhr.onload = () => {
-        const ok = xhr.status >= 200 && xhr.status < 300;
-        resolve({ ok, status: xhr.status, text: () => Promise.resolve(xhr.responseText) });
+        if (xhr.status >= 200 && xhr.status < 300) {
+          resolve({ ok: true, status: xhr.status });
+        } else {
+          reject(new Error(`Upload failed (HTTP ${xhr.status}) — ${xhr.responseText.slice(0,120)}`));
+        }
       };
-      xhr.onerror = () => reject(new Error(`Network blocked (status 0). Check Supabase CORS settings allow https://danielphua85.github.io`));
-      xhr.ontimeout = () => reject(new Error('Upload timed out. Try a smaller/shorter video.'));
-      xhr.timeout = 180000; // 3 min
-      xhr.send(buffer);
+      xhr.onerror = () => reject(new Error('Network error during upload. Check your connection.'));
+      xhr.ontimeout = () => reject(new Error('Upload timed out. Try a shorter/smaller video.'));
+      xhr.send(e.target.result);
     };
-    reader.onerror = () => reject(new Error('Failed to read file'));
-    reader.readAsArrayBuffer(blob);
+    reader.readAsArrayBuffer(file);
   });
 }
 
-const STORAGE_DEL = (bucket, paths) => fetch(
+// ── Storage delete ──
+const deletePaths = (bucket, paths) => fetch(
   `${SUPA_URL}/storage/v1/object/${bucket}`,
-  {method:'DELETE',headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,
-    'Content-Type':'application/json'},body:JSON.stringify({prefixes:paths})}
+  { method:'DELETE',
+    headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Content-Type':'application/json'},
+    body: JSON.stringify({prefixes: paths}) }
 );
 
-// ══════════════════════════════════════
+// ══════════════════════════════
 // STATE
-// ══════════════════════════════════════
-let pairs = [];
-let editingId = null;
-let deleteTarget = null;
-let chosenPhoto = null;
-let chosenVideo = null;
-let arScene = null;
+// ══════════════════════════════
+let pairs=[], deleteTarget=null, chosenPhoto=null, chosenVideo=null, arScene=null;
 
-// ══════════════════════════════════════
+// ══════════════════════════════
 // INIT
-// ══════════════════════════════════════
-document.addEventListener('DOMContentLoaded', () => {
-  loadPairs();
-});
+// ══════════════════════════════
+document.addEventListener('DOMContentLoaded', loadPairs);
 
-// ══════════════════════════════════════
-// SUPABASE: LOAD PAIRS
-// ══════════════════════════════════════
+// ══════════════════════════════
+// LOAD PAIRS
+// ══════════════════════════════
 async function loadPairs() {
   try {
     const r = await API('ar_pairs?order=created_at.desc');
+    if (!r.ok) throw new Error('HTTP ' + r.status);
     pairs = await r.json();
     renderLibrary();
     renderAdminList();
-    populateCatFilter();
+    populateCats();
   } catch(e) {
-    showToast('Failed to load library','err');
+    showToast('Could not load library: ' + e.message, 'err');
   }
 }
 
-// ══════════════════════════════════════
-// LIBRARY RENDER
-// ══════════════════════════════════════
+// ══════════════════════════════
+// RENDER LIBRARY
+// ══════════════════════════════
 function renderLibrary() {
-  const q = document.getElementById('search-inp').value.toLowerCase();
+  const q   = document.getElementById('search-inp').value.toLowerCase();
   const cat = document.getElementById('cat-filter').value;
-  const filtered = pairs.filter(p => {
-    const matchQ = !q || p.title.toLowerCase().includes(q) || (p.category||'').toLowerCase().includes(q);
-    const matchC = !cat || p.category === cat;
-    return matchQ && matchC;
-  });
-
+  const list = pairs.filter(p =>
+    (!q || p.title.toLowerCase().includes(q) || (p.category||'').toLowerCase().includes(q)) &&
+    (!cat || p.category === cat)
+  );
   const el = document.getElementById('pairs-list');
-  if (!filtered.length) {
+  if (!list.length) {
     el.innerHTML = `<div class="empty-state">
-      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" display="block" style="margin:0 auto 12px">
+      <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" display="block" style="margin:0 auto 14px">
         <rect x="2" y="2" width="20" height="20" rx="3"/><circle cx="8" cy="9" r="2"/>
         <path d="M2 18l5-5 4 4 3-3 5 5"/>
       </svg>
-      <p>${pairs.length ? 'No results found.' : 'No AR pairs yet.<br><strong>Ask admin to add some!</strong>'}</p>
+      <p>${pairs.length ? 'No results found.' : 'No AR pairs yet.<br><strong>Admin can add pairs using the Admin button.</strong>'}</p>
     </div>`;
     return;
   }
-
-  el.innerHTML = filtered.map(p => `
-    <div class="pair-card" onclick="launchFromLibrary('${p.id}')">
+  el.innerHTML = list.map(p => `
+    <div class="pair-card" onclick="launchAR_fromLib('${p.id}')">
       ${p.photo_url
-        ? `<img class="pair-thumb" src="${p.photo_url}" alt="" loading="lazy" onerror="this.style.display='none'">`
-        : `<div class="pair-thumb-placeholder"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>`
+        ? `<img class="pair-thumb" src="${p.photo_url}" loading="lazy" onerror="this.style.display='none'">`
+        : `<div class="pair-thumb-ph"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>`
       }
       <div class="pair-info">
-        <div class="pair-cat">${p.category || 'General'}</div>
+        <span class="pair-cat">${p.category||'General'}</span>
         <div class="pair-title">${p.title}</div>
-        ${p.description ? `<div class="pair-desc">${p.description}</div>` : ''}
+        ${p.description?`<div class="pair-desc">${p.description}</div>`:''}
         <div class="pair-footer">
-          <div class="pair-date">${fmtDate(p.created_at)}</div>
-          <div class="play-chip">
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-            Scan AR
-          </div>
+          <span class="pair-date">${fmtDate(p.created_at)}</span>
+          <span class="play-chip">▶ Scan AR</span>
         </div>
       </div>
-    </div>
-  `).join('');
-}
-
-function populateCatFilter() {
-  const cats = [...new Set(pairs.map(p => p.category).filter(Boolean))].sort();
-  const sel = document.getElementById('cat-filter');
-  const cur = sel.value;
-  sel.innerHTML = '<option value="">All Categories</option>' +
-    cats.map(c => `<option value="${c}" ${c===cur?'selected':''}>${c}</option>`).join('');
-}
-
-// ══════════════════════════════════════
-// ADMIN LIST RENDER
-// ══════════════════════════════════════
-async function testConnection() {
-  const el = document.getElementById('debug-info');
-  if (!el) return;
-  el.innerHTML = `⏳ Testing connection...`;
-  try {
-    const r = await fetch(`${SUPA_URL}/rest/v1/ar_pairs?limit=1`, {
-      method: 'GET',
-      headers:{
-        'apikey': SUPA_KEY,
-        'Authorization': 'Bearer ' + SUPA_KEY,
-        'Content-Type': 'application/json'
-      }
-    });
-    if (r.ok) {
-      const data = await r.json();
-      el.innerHTML = `✅ Database: Connected<br>✅ Supabase project: OK<br>📦 Version: v4<br>📋 Pairs in DB: ${Array.isArray(data) ? data.length : '?'}`;
-    } else {
-      const txt = await r.text().catch(()=>'');
-      el.innerHTML = `❌ Database error: HTTP ${r.status}<br>${txt.slice(0,100)}<br>Check Supabase RLS policies`;
-    }
-  } catch(e) {
-    el.innerHTML = `❌ Cannot reach Supabase<br>Error: ${e.message}<br><br>👉 Go to Supabase → Settings → API<br>Add to Allowed Origins:<br>https://danielphua85.github.io`;
-  }
+    </div>`).join('');
 }
 
 function renderAdminList() {
@@ -523,427 +518,341 @@ function renderAdminList() {
   el.innerHTML = pairs.map(p => `
     <div class="pair-card" style="cursor:default">
       ${p.photo_url
-        ? `<img class="pair-thumb" src="${p.photo_url}" alt="" loading="lazy" onerror="this.style.display='none'">`
-        : `<div class="pair-thumb-placeholder"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><rect x="3" y="3" width="18" height="18" rx="2"/></svg></div>`
+        ? `<img class="pair-thumb" src="${p.photo_url}" loading="lazy" onerror="this.style.display='none'">`
+        : `<div class="pair-thumb-ph"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><rect x="3" y="3" width="18" height="18" rx="2"/></svg></div>`
       }
       <div class="pair-info">
-        <div class="pair-cat">${p.category || 'General'}</div>
+        <span class="pair-cat">${p.category||'General'}</span>
         <div class="pair-title">${p.title}</div>
-        ${p.description ? `<div class="pair-desc">${p.description}</div>` : ''}
+        ${p.description?`<div class="pair-desc">${p.description}</div>`:''}
         <div class="pair-footer">
           <button class="delete-btn" onclick="openDelModal('${p.id}')">🗑 Delete</button>
-          <button class="play-chip" style="cursor:pointer;border:none;background:rgba(200,168,75,0.12);padding:5px 12px;border-radius:20px;border:1px solid rgba(200,168,75,0.3);color:var(--gold);font-size:10px;letter-spacing:1px" onclick="launchFromLibrary('${p.id}')">▶ Test AR</button>
+          <span class="play-chip" style="cursor:pointer" onclick="launchAR_fromLib('${p.id}')">▶ Test</span>
         </div>
       </div>
-    </div>
-  `).join('');
+    </div>`).join('');
 }
 
-// ══════════════════════════════════════
-// AR LAUNCH FROM LIBRARY
-// ══════════════════════════════════════
-async function launchFromLibrary(id) {
-  const pair = pairs.find(p => p.id === id);
+function populateCats() {
+  const cats = [...new Set(pairs.map(p=>p.category).filter(Boolean))].sort();
+  const sel = document.getElementById('cat-filter');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">All Categories</option>' +
+    cats.map(c=>`<option value="${c}"${c===cur?' selected':''}>${c}</option>`).join('');
+}
+
+// ══════════════════════════════
+// AR LAUNCH
+// ══════════════════════════════
+async function launchAR_fromLib(id) {
+  const pair = pairs.find(p=>p.id===id);
   if (!pair) return;
 
   showScreen('s-loading');
-  setLoad(5, 'Loading AR libraries…', pair.title);
+  setLoad(5, pair.title, 'Waiting for AR engine…');
 
-  // Wait for MINDAR
-  let waited = 0;
-  while (typeof MINDAR === 'undefined' || !MINDAR.IMAGE || !MINDAR.IMAGE.Compiler) {
-    await pause(300); waited += 300;
-    if (waited > 15000) { setLoad(0,'AR library failed to load. Check connection.'); return; }
+  let waited=0;
+  while(typeof MINDAR==='undefined'||!MINDAR.IMAGE||!MINDAR.IMAGE.Compiler){
+    await pause(300); waited+=300;
+    if(waited>15000){setLoad(0,'AR engine','Failed to load. Check internet.'); return;}
   }
 
   let mindURL;
-
-  // If we have cached mind_data, use it directly
-  if (pair.mind_data) {
-    setLoad(40, 'Using cached AR target…');
+  if(pair.mind_data){
+    setLoad(50,'Loading cached AR target…',pair.title);
     await pause(200);
-    const bytes = base64ToBuffer(pair.mind_data);
-    mindURL = URL.createObjectURL(new Blob([bytes]));
-    setLoad(90, 'Launching AR…');
+    mindURL = URL.createObjectURL(new Blob([base64ToBuffer(pair.mind_data)]));
+    setLoad(90,'Launching AR…',pair.title);
     await pause(200);
   } else {
-    // Compile fresh from photo_url
-    setLoad(15, 'Downloading target image…');
+    setLoad(15,'Downloading photo…',pair.title);
     let img;
     try {
-      img = await loadImageFromURL(pair.photo_url);
+      img = await loadImg(pair.photo_url);
     } catch(e) {
-      setLoad(0,'Failed to load image. Check connection.'); return;
+      setLoad(0,'Failed to load photo',pair.title); return;
     }
-
-    setLoad(25, 'Compiling AR target…');
+    setLoad(25,'Compiling AR target…',pair.title);
     await pause(100);
     const compiler = new MINDAR.IMAGE.Compiler();
-    await compiler.compileImageTargets([img], (prog) => {
-      setLoad(25 + Math.round(prog * 55), `Processing… ${Math.round(prog*100)}%`);
+    await compiler.compileImageTargets([img],(prog)=>{
+      setLoad(25+Math.round(prog*60),`Processing… ${Math.round(prog*100)}%`,pair.title);
     });
-
-    setLoad(85, 'Saving to library…');
+    setLoad(88,'Saving target…',pair.title);
     const buf = compiler.exportData();
     mindURL = URL.createObjectURL(new Blob([buf]));
-
-    // Cache mind_data to Supabase so next time is instant
-    const b64 = bufferToBase64(buf);
-    API(`ar_pairs?id=eq.${id}`, {
-      method:'PATCH',
-      body: JSON.stringify({mind_data: b64})
-    }).catch(()=>{});
-
-    setLoad(95, 'Launching AR…');
+    API(`ar_pairs?id=eq.${id}`,{method:'PATCH',body:JSON.stringify({mind_data:bufferToBase64(buf)})}).catch(()=>{});
+    setLoad(95,'Launching…',pair.title);
     await pause(200);
   }
-
-  setLoad(100, 'Ready!');
+  setLoad(100,'Ready!',pair.title);
   await pause(300);
-  launchAR(mindURL, pair.video_url, pair.title);
+  startARScene(mindURL, pair.video_url, pair.title);
 }
 
-// ══════════════════════════════════════
-// AR ENGINE
-// ══════════════════════════════════════
-function launchAR(mindURL, videoURL, title) {
+function startARScene(mindURL, videoURL, title) {
   showScreen('s-ar');
-  document.getElementById('ar-title-hud').innerHTML = `⬡ ${title||'AR MAGIC'}<br><span id="hud-state">SCANNING…</span>`;
+  document.getElementById('ar-title-hud').innerHTML = `📸 ${title||'AR Magic'}<br><span id="hud-state">SCANNING…</span>`;
 
   const wrap = document.getElementById('ar-wrap');
   wrap.innerHTML = '';
 
   const scene = document.createElement('a-scene');
-  scene.setAttribute('mindar-image', `imageTargetSrc: ${mindURL}; autoStart: true; uiLoading: no; uiError: no; uiScanning: no;`);
-  scene.setAttribute('color-space', 'sRGB');
-  scene.setAttribute('renderer', 'colorManagement: true, physicallyCorrectLights');
-  scene.setAttribute('vr-mode-ui', 'enabled: false');
-  scene.setAttribute('device-orientation-permission-ui', 'enabled: false');
-  scene.setAttribute('embedded', '');
+  scene.setAttribute('mindar-image',`imageTargetSrc: ${mindURL}; autoStart: true; uiLoading: no; uiError: no; uiScanning: no;`);
+  scene.setAttribute('color-space','sRGB');
+  scene.setAttribute('renderer','colorManagement: true, physicallyCorrectLights');
+  scene.setAttribute('vr-mode-ui','enabled: false');
+  scene.setAttribute('device-orientation-permission-ui','enabled: false');
+  scene.setAttribute('embedded','');
 
-  const assets = document.createElement('a-assets');
-  const vid = document.createElement('video');
-  vid.id = 'arvid';
-  vid.src = videoURL;
-  vid.setAttribute('loop', 'true');
-  vid.setAttribute('crossorigin', 'anonymous');
-  vid.setAttribute('muted', '');
-  vid.setAttribute('playsinline', '');
-  vid.setAttribute('webkit-playsinline', '');
-  vid.preload = 'auto';
-  assets.appendChild(vid);
-  scene.appendChild(assets);
+  const assets=document.createElement('a-assets');
+  const vid=document.createElement('video');
+  vid.id='arvid'; vid.src=videoURL;
+  vid.setAttribute('loop','true'); vid.setAttribute('crossorigin','anonymous');
+  vid.setAttribute('muted',''); vid.setAttribute('playsinline','');
+  vid.setAttribute('webkit-playsinline',''); vid.preload='auto';
+  assets.appendChild(vid); scene.appendChild(assets);
 
-  const cam = document.createElement('a-camera');
-  cam.setAttribute('position', '0 0 0');
-  cam.setAttribute('look-controls', 'enabled: false');
+  const cam=document.createElement('a-camera');
+  cam.setAttribute('position','0 0 0'); cam.setAttribute('look-controls','enabled: false');
   scene.appendChild(cam);
 
-  const target = document.createElement('a-entity');
-  target.id = 'ar-target';
-  target.setAttribute('mindar-image-target', 'targetIndex: 0');
+  const target=document.createElement('a-entity');
+  target.id='ar-target'; target.setAttribute('mindar-image-target','targetIndex: 0');
+  const plane=document.createElement('a-video');
+  plane.setAttribute('src','#arvid'); plane.setAttribute('position','0 0 0.001');
+  plane.setAttribute('width','1'); plane.setAttribute('height','0.5625');
+  target.appendChild(plane); scene.appendChild(target);
+  wrap.appendChild(scene); arScene=scene;
 
-  const plane = document.createElement('a-video');
-  plane.setAttribute('src', '#arvid');
-  plane.setAttribute('position', '0 0 0.001');
-  plane.setAttribute('width', '1');
-  plane.setAttribute('height', '0.5625');
-  scene.appendChild(target);
-  target.appendChild(plane);
-  wrap.appendChild(scene);
-  arScene = scene;
-
-  scene.addEventListener('loaded', () => {
-    const t = document.getElementById('ar-target');
-    const v = document.getElementById('arvid');
-    t.addEventListener('targetFound', () => {
-      v.muted = false; v.play().catch(()=>{ v.muted=true; v.play(); });
-      setPill('✓ Found — Playing', true);
-      document.getElementById('hud-state').textContent = 'LOCKED ✓';
-      document.getElementById('beam').style.cssText = 'animation-play-state:paused;opacity:0';
+  scene.addEventListener('loaded',()=>{
+    const t=document.getElementById('ar-target');
+    const v=document.getElementById('arvid');
+    t.addEventListener('targetFound',()=>{
+      v.muted=false; v.play().catch(()=>{v.muted=true;v.play();});
+      document.getElementById('status-pill').textContent='✅ Found — Playing!';
+      document.getElementById('status-pill').classList.add('found');
+      document.getElementById('hud-state').textContent='LOCKED ✓';
+      document.getElementById('beam').style.cssText='animation-play-state:paused;opacity:0';
     });
-    t.addEventListener('targetLost', () => {
-      v.pause(); v.muted = true;
-      setPill('🔍 Point at your photo', false);
-      document.getElementById('hud-state').textContent = 'SCANNING…';
-      document.getElementById('beam').style.cssText = '';
+    t.addEventListener('targetLost',()=>{
+      v.pause(); v.muted=true;
+      document.getElementById('status-pill').textContent='🔍 Point camera at your photo';
+      document.getElementById('status-pill').classList.remove('found');
+      document.getElementById('hud-state').textContent='SCANNING…';
+      document.getElementById('beam').style.cssText='';
     });
   });
 }
 
-function stopAR() {
-  if (arScene) {
-    try {
-      const sys = arScene.systems && arScene.systems['mindar-image-system'];
-      if (sys) sys.stop();
-    } catch(e){}
-    document.getElementById('ar-wrap').innerHTML = '';
-    arScene = null;
+function stopAR(){
+  if(arScene){
+    try{const s=arScene.systems&&arScene.systems['mindar-image-system'];if(s)s.stop();}catch(e){}
+    document.getElementById('ar-wrap').innerHTML=''; arScene=null;
   }
-  // Go back to wherever user came from
-  const prev = document.getElementById('s-admin').classList.contains('hidden') ? 's-library' : 's-admin';
   showScreen('s-library');
 }
 
-// ══════════════════════════════════════
-// ADMIN: LOGIN
-// ══════════════════════════════════════
-function doLogin() {
-  const pw = document.getElementById('pw-input').value;
-  if (pw === ADMIN_PW) {
-    document.getElementById('pw-input').value = '';
+// ══════════════════════════════
+// ADMIN LOGIN
+// ══════════════════════════════
+function doLogin(){
+  if(document.getElementById('pw-input').value===ADMIN_PW){
+    document.getElementById('pw-input').value='';
     document.getElementById('login-err').classList.remove('show');
-    showScreen('s-admin');
-    renderAdminList();
-    testConnection();
+    showScreen('s-admin'); renderAdminList(); testConnection();
   } else {
     document.getElementById('login-err').classList.add('show');
   }
 }
 
-// ══════════════════════════════════════
-// ADMIN: ADD MODAL
-// ══════════════════════════════════════
-function openAddModal() {
-  editingId = null;
-  chosenPhoto = null;
-  chosenVideo = null;
-  document.getElementById('f-title').value = '';
-  document.getElementById('f-cat').value = '';
-  document.getElementById('f-desc').value = '';
-  document.getElementById('btn-photo').textContent = '📷 Choose Photo';
-  document.getElementById('btn-photo').classList.remove('chosen');
-  document.getElementById('btn-video').textContent = '🎬 Choose Video';
-  document.getElementById('btn-video').classList.remove('chosen');
+async function testConnection(){
+  const el=document.getElementById('debug-info');
+  if(!el) return;
+  el.textContent='⏳ Checking…';
+  try{
+    const r=await API('ar_pairs?limit=1');
+    if(r.ok){
+      const d=await r.json();
+      el.innerHTML=`✅ Connected to Supabase<br>📋 Total pairs: ${pairs.length}`;
+    } else {
+      el.innerHTML=`❌ DB error: HTTP ${r.status}`;
+    }
+  }catch(e){
+    el.innerHTML=`❌ ${e.message}`;
+  }
+}
+
+// ══════════════════════════════
+// ADD PAIR MODAL
+// ══════════════════════════════
+function openAddModal(){
+  chosenPhoto=null; chosenVideo=null;
+  document.getElementById('f-title').value='';
+  document.getElementById('f-cat').value='';
+  document.getElementById('f-desc').value='';
+  resetFileBtn('photo'); resetFileBtn('video');
   document.getElementById('upload-prog').classList.remove('show');
-  document.getElementById('modal-add-title').textContent = 'Add AR Pair';
+  document.getElementById('btn-save-pair').disabled=false;
   document.getElementById('modal-add').classList.remove('hidden');
 }
+function closeAddModal(){document.getElementById('modal-add').classList.add('hidden');}
 
-function closeAddModal() {
-  document.getElementById('modal-add').classList.add('hidden');
+function resetFileBtn(type){
+  const btn=document.getElementById(`btn-${type}`);
+  btn.className='file-pick-btn';
+  btn.querySelector('.fp-label').childNodes[0].textContent=`Tap to choose ${type}`;
+  btn.querySelector(`.fp-size`).textContent='';
 }
 
-function fileChosen(type, inp) {
-  const file = inp.files[0];
-  if (!file) return;
-  if (type === 'photo') {
-    chosenPhoto = file;
-    const btn = document.getElementById('btn-photo');
-    btn.textContent = '✓ ' + file.name.slice(0,20);
-    btn.classList.add('chosen');
-  } else {
-    chosenVideo = file;
-    const btn = document.getElementById('btn-video');
-    btn.textContent = '✓ ' + file.name.slice(0,20);
-    btn.classList.add('chosen');
-  }
+function fileChosen(type,inp){
+  const file=inp.files[0]; if(!file) return;
+  if(type==='photo') chosenPhoto=file;
+  else chosenVideo=file;
+  const btn=document.getElementById(`btn-${type}`);
+  btn.className='file-pick-btn chosen';
+  btn.querySelector('.fp-icon').textContent=type==='photo'?'✅':'✅';
+  btn.querySelector('.fp-label').childNodes[0].textContent=file.name.slice(0,28);
+  btn.querySelector('.fp-size').textContent=fmtSize(file.size);
 }
 
-async function savePair() {
-  const title = document.getElementById('f-title').value.trim();
-  if (!title) { showToast('Title is required','err'); return; }
-  if (!chosenPhoto) { showToast('Please choose a photo','err'); return; }
-  if (!chosenVideo) { showToast('Please choose a video','err'); return; }
+async function savePair(){
+  const title=document.getElementById('f-title').value.trim();
+  if(!title){showToast('Title is required','err');return;}
+  if(!chosenPhoto){showToast('Please choose a photo','err');return;}
+  if(!chosenVideo){showToast('Please choose a video','err');return;}
 
-  const btn = document.getElementById('btn-save-pair');
-  btn.disabled = true;
-  const prog = document.getElementById('upload-prog');
-  prog.classList.add('show');
+  const btn=document.getElementById('btn-save-pair');
+  btn.disabled=true;
+  const progWrap=document.getElementById('upload-prog');
+  progWrap.classList.add('show');
 
-  try {
-    const uid = Date.now();
-    // Sanitise filename: remove spaces, special chars
-    const cleanPhotoName = chosenPhoto.name.replace(/[^a-zA-Z0-9._-]/g,'_');
-    const cleanVideoName = chosenVideo.name.replace(/[^a-zA-Z0-9._-]/g,'_');
-    const photoPath = `${uid}-${cleanPhotoName}`;
-    const videoPath = `${uid}-${cleanVideoName}`;
+  try{
+    const uid=Date.now();
+    const pName=`${uid}_${chosenPhoto.name.replace(/[^a-zA-Z0-9._-]/g,'_')}`;
+    const vName=`${uid}_${chosenVideo.name.replace(/[^a-zA-Z0-9._-]/g,'_')}`;
 
-    // Debug: show we got this far
-    setUpProg(8, 'Connecting to storage…');
-    await pause(300);
-
-    // Upload photo
-    setUpProg(10, 'Uploading photo…');
-    const pr = await STORAGE(PHOTO_BUCKET, photoPath, chosenPhoto, (pct) => {
-      setUpProg(10 + Math.round(pct * 0.35), `Uploading photo… ${pct}%`);
+    // 1. Upload photo
+    setUpProg('Uploading photo…', `${chosenPhoto.name} (${fmtSize(chosenPhoto.size)})`, 0);
+    await uploadFile(PH_BUCKET, pName, chosenPhoto, (pct)=>{
+      setUpProg('Uploading photo…',`${pct}% uploaded`,pct*0.4);
     });
-    if (!pr.ok) {
-      const errText = await pr.text().catch(()=>'');
-      let hint = '';
-      if (pr.status === 400) hint = ' — Check storage bucket exists and is public';
-      else if (pr.status === 403) hint = ' — Storage policy not set. Run the SQL fix.';
-      else if (pr.status === 404) hint = ' — Bucket "ar-photos" not found. Create it in Supabase Storage.';
-      throw new Error(`Photo upload failed (${pr.status})${hint}`);
-    }
-    const photoURL = `${SUPA_URL}/storage/v1/object/public/${PHOTO_BUCKET}/${photoPath}`;
+    const photoURL=`${SUPA_URL}/storage/v1/object/public/${PH_BUCKET}/${pName}`;
 
-    // Upload video
-    setUpProg(50, 'Uploading video… (may take a while for large files)');
-    const vr = await STORAGE(VIDEO_BUCKET, videoPath, chosenVideo, (pct) => {
-      setUpProg(50 + Math.round(pct * 0.35), `Uploading video… ${pct}%`);
+    // 2. Upload video
+    setUpProg('Uploading video…',`${chosenVideo.name} (${fmtSize(chosenVideo.size)})`, 40);
+    await uploadFile(VD_BUCKET, vName, chosenVideo, (pct)=>{
+      setUpProg('Uploading video…',`${pct}% uploaded — please wait`,40+pct*0.4);
     });
-    if (!vr.ok) {
-      const errText = await vr.text().catch(()=>'');
-      let hint = '';
-      if (vr.status === 403) hint = ' — Storage policy not set. Run the SQL fix.';
-      else if (vr.status === 404) hint = ' — Bucket "ar-videos" not found. Create it in Supabase Storage.';
-      else if (vr.status === 413) hint = ' — Video too large. Try a shorter/smaller video.';
-      throw new Error(`Video upload failed (${vr.status})${hint}`);
-    }
-    const videoURL = `${SUPA_URL}/storage/v1/object/public/${VIDEO_BUCKET}/${videoPath}`;
+    const videoURL=`${SUPA_URL}/storage/v1/object/public/${VD_BUCKET}/${vName}`;
 
-    // Compile mind data
-    setUpProg(70, 'Compiling AR target…');
-    await pause(100);
+    // 3. Compile mind data in background
+    setUpProg('Compiling AR target…','Analysing your photo…',82);
+    let mind_data=null;
+    try{
+      while(typeof MINDAR==='undefined'||!MINDAR.IMAGE||!MINDAR.IMAGE.Compiler) await pause(300);
+      const img=await loadImg(photoURL);
+      const compiler=new MINDAR.IMAGE.Compiler();
+      await compiler.compileImageTargets([img],()=>{});
+      mind_data=bufferToBase64(compiler.exportData());
+    }catch(e){/* will compile on first scan */}
 
-    let mind_data = null;
-    try {
-      while (typeof MINDAR === 'undefined' || !MINDAR.IMAGE || !MINDAR.IMAGE.Compiler) await pause(300);
-      const img = await loadImageFromURL(photoURL);
-      const compiler = new MINDAR.IMAGE.Compiler();
-      await compiler.compileImageTargets([img], ()=>{});
-      const buf = compiler.exportData();
-      mind_data = bufferToBase64(buf);
-    } catch(e) { /* compile later on first scan */ }
-
-    // Save to DB
-    setUpProg(90, 'Saving to library…');
-    const res = await API('ar_pairs', {
-      method: 'POST',
-      body: JSON.stringify({
+    // 4. Save to DB
+    setUpProg('Saving to library…','Almost done!',93);
+    const res=await API('ar_pairs',{
+      method:'POST',
+      body:JSON.stringify({
         title,
-        category: document.getElementById('f-cat').value.trim() || 'General',
-        description: document.getElementById('f-desc').value.trim(),
-        photo_url: photoURL,
-        video_url: videoURL,
-        mind_data
+        category:document.getElementById('f-cat').value.trim()||'General',
+        description:document.getElementById('f-desc').value.trim(),
+        photo_url:photoURL, video_url:videoURL, mind_data
       })
     });
+    if(!res.ok){
+      const t=await res.text().catch(()=>'');
+      throw new Error(`Database error (${res.status}): ${t.slice(0,100)}`);
+    }
 
-    if (!res.ok) throw new Error('Database save failed');
-
-    setUpProg(100, 'Done!');
-    await pause(400);
+    setUpProg('Done! ✓','AR pair saved successfully',100);
+    await pause(600);
     closeAddModal();
-    showToast('AR pair added! ✓', 'ok');
+    showToast('✅ AR pair added!','ok');
     await loadPairs();
     renderAdminList();
 
-  } catch(e) {
-    showToast(e.message, 'err', true);
+  }catch(e){
     console.error(e);
-  } finally {
-    btn.disabled = false;
-    prog.classList.remove('show');
+    showToast(e.message,'err');
+  }finally{
+    btn.disabled=false;
+    progWrap.classList.remove('show');
   }
 }
 
-// ══════════════════════════════════════
-// ADMIN: DELETE
-// ══════════════════════════════════════
-function openDelModal(id) {
-  deleteTarget = id;
-  document.getElementById('modal-del').classList.remove('hidden');
+function setUpProg(label,sub,pct){
+  document.getElementById('prog-label').textContent=label;
+  document.getElementById('prog-sub').textContent=sub;
+  document.getElementById('prog-fill').style.width=Math.round(pct)+'%';
+  document.getElementById('prog-pct').textContent=Math.round(pct)+'%';
 }
-function closeDelModal() {
-  deleteTarget = null;
-  document.getElementById('modal-del').classList.add('hidden');
-}
-async function confirmDelete() {
-  if (!deleteTarget) return;
-  const pair = pairs.find(p => p.id === deleteTarget);
+
+// ══════════════════════════════
+// DELETE
+// ══════════════════════════════
+function openDelModal(id){deleteTarget=id;document.getElementById('modal-del').classList.remove('hidden');}
+function closeDelModal(){deleteTarget=null;document.getElementById('modal-del').classList.add('hidden');}
+async function confirmDelete(){
+  if(!deleteTarget) return;
+  const pair=pairs.find(p=>p.id===deleteTarget);
   closeDelModal();
-  try {
-    // Delete files from storage
-    if (pair.photo_url) {
-      const pPath = pair.photo_url.split(`/${PHOTO_BUCKET}/`)[1];
-      if (pPath) await STORAGE_DEL(PHOTO_BUCKET, [pPath]);
-    }
-    if (pair.video_url) {
-      const vPath = pair.video_url.split(`/${VIDEO_BUCKET}/`)[1];
-      if (vPath) await STORAGE_DEL(VIDEO_BUCKET, [vPath]);
-    }
-    // Delete DB row
-    await API(`ar_pairs?id=eq.${deleteTarget}`, { method:'DELETE' });
-    showToast('Deleted ✓', 'ok');
-    await loadPairs();
-    renderAdminList();
-  } catch(e) {
-    showToast('Delete failed', 'err');
-  }
-  deleteTarget = null;
+  try{
+    if(pair.photo_url){const p=pair.photo_url.split(`/${PH_BUCKET}/`)[1];if(p)await deletePaths(PH_BUCKET,[p]);}
+    if(pair.video_url){const v=pair.video_url.split(`/${VD_BUCKET}/`)[1];if(v)await deletePaths(VD_BUCKET,[v]);}
+    await API(`ar_pairs?id=eq.${deleteTarget}`,{method:'DELETE'});
+    showToast('Deleted ✓','ok');
+    await loadPairs(); renderAdminList();
+  }catch(e){showToast('Delete failed: '+e.message,'err');}
+  deleteTarget=null;
 }
 
-// ══════════════════════════════════════
+// ══════════════════════════════
 // HELPERS
-// ══════════════════════════════════════
-function showScreen(id) {
-  ['s-library','s-admin-login','s-admin','s-loading','s-ar'].forEach(s => {
-    document.getElementById(s).classList.toggle('hidden', s !== id);
+// ══════════════════════════════
+function showScreen(id){
+  ['s-library','s-admin-login','s-admin','s-loading','s-ar'].forEach(s=>{
+    document.getElementById(s).classList.toggle('hidden',s!==id);
   });
 }
-
-function setLoad(pct, msg, title) {
-  document.getElementById('prog-bar').style.width = pct + '%';
-  document.getElementById('load-pct').textContent = pct + '%';
-  if (msg) document.getElementById('load-msg').textContent = msg;
-  if (title) document.getElementById('load-title').textContent = title;
+function setLoad(pct,msg,title){
+  document.getElementById('load-bar').style.width=pct+'%';
+  document.getElementById('load-pct').textContent=pct+'%';
+  if(msg) document.getElementById('load-msg').textContent=msg;
+  if(title) document.getElementById('load-title').textContent=title;
 }
-
-function setUpProg(pct, msg) {
-  document.getElementById('up-fill').style.width = pct + '%';
-  document.getElementById('up-msg').textContent = msg;
-}
-
-function setPill(txt, found) {
-  const p = document.getElementById('status-pill');
-  p.textContent = txt;
-  p.classList.toggle('found', found);
-}
-
-function pause(ms=60) { return new Promise(r => setTimeout(r, ms)); }
-
-function fmtDate(iso) {
-  if (!iso) return '';
-  return new Date(iso).toLocaleDateString('en-SG', {day:'2-digit',month:'short',year:'numeric'});
-}
-
-function loadImageFromURL(url) {
-  return new Promise((res, rej) => {
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.onload = () => res(img);
-    img.onerror = rej;
-    img.src = url;
+function pause(ms=60){return new Promise(r=>setTimeout(r,ms));}
+function fmtDate(iso){if(!iso)return'';return new Date(iso).toLocaleDateString('en-SG',{day:'2-digit',month:'short',year:'numeric'});}
+function fmtSize(bytes){if(bytes<1024*1024)return(bytes/1024).toFixed(0)+'KB';return(bytes/1024/1024).toFixed(1)+'MB';}
+function loadImg(url){
+  return new Promise((res,rej)=>{
+    const i=new Image(); i.crossOrigin='anonymous';
+    i.onload=()=>res(i); i.onerror=rej; i.src=url;
   });
 }
-
-function bufferToBase64(buffer) {
-  let binary = '';
-  const bytes = new Uint8Array(buffer);
-  for (let i = 0; i < bytes.byteLength; i++) binary += String.fromCharCode(bytes[i]);
-  return btoa(binary);
+function bufferToBase64(buffer){
+  let bin=''; const b=new Uint8Array(buffer);
+  for(let i=0;i<b.length;i++) bin+=String.fromCharCode(b[i]);
+  return btoa(bin);
 }
-
-function base64ToBuffer(b64) {
-  const binary = atob(b64);
-  const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-  return bytes.buffer;
+function base64ToBuffer(b64){
+  const bin=atob(b64); const b=new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++) b[i]=bin.charCodeAt(i);
+  return b.buffer;
 }
-
-let toastTimer;
-function showToast(msg, type='', long=false) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.className = 'show ' + type;
-  t.style.whiteSpace = long ? 'normal' : 'nowrap';
-  t.style.maxWidth = long ? '90vw' : '';
-  t.style.textAlign = long ? 'center' : '';
-  t.style.padding = long ? '12px 20px' : '';
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.className = '', long ? 6000 : 3000);
+let _tt;
+function showToast(msg,type=''){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.className='show '+(type||'');
+  clearTimeout(_tt); _tt=setTimeout(()=>t.className='',type==='err'?5000:2500);
 }
 </script>
 
