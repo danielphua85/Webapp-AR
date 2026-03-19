@@ -35,7 +35,6 @@ flex-shrink:0;position:sticky;top:0;z-index:50;box-shadow:0 1px 4px rgba(37,99,2
 .tb-btn{padding:8px 16px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;
 border:1.5px solid var(–border);background:#fff;color:var(–blue);-webkit-appearance:none;}
 .tb-btn.primary{background:var(–blue);color:#fff;border-color:var(–blue);}
-.tb-btn.green{background:var(–green);color:#fff;border-color:var(–green);font-size:13px;padding:10px 20px;}
 
 .wrap{width:100%;max-width:520px;padding:18px 15px 120px;display:flex;flex-direction:column;gap:13px;}
 
@@ -44,7 +43,7 @@ border:1.5px solid var(–border);background:#fff;color:var(–blue);-webkit-app
 border:none;border-radius:14px;font-family:‘Nunito’,sans-serif;font-size:17px;font-weight:900;
 cursor:pointer;-webkit-appearance:none;display:flex;align-items:center;justify-content:center;
 gap:10px;box-shadow:0 4px 16px rgba(37,99,235,.35);transition:all .15s;}
-.scan-all-btn:active{transform:scale(.98);box-shadow:none;}
+.scan-all-btn:active{transform:scale(.98);}
 .scan-all-btn .count{background:rgba(255,255,255,.25);padding:2px 10px;border-radius:20px;font-size:13px;}
 
 /* SEARCH */
@@ -93,8 +92,8 @@ box-shadow:0 -8px 32px rgba(0,0,0,.14);}
 .field{display:flex;flex-direction:column;gap:6px;margin-bottom:13px;}
 .field label{font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(–muted);}
 .field input,.field textarea{padding:12px 14px;background:var(–card2);border:1.5px solid var(–border);
-border-radius:10px;color:var(–text);font-size:13px;outline:none;width:100%;
--webkit-appearance:none;font-family:‘Inter’,sans-serif;}
+border-radius:10px;color:var(–text);font-size:13px;outline:none;
+width:100%;-webkit-appearance:none;font-family:‘Inter’,sans-serif;}
 .field textarea{resize:vertical;min-height:68px;line-height:1.6;}
 .field input:focus,.field textarea:focus{border-color:var(–blue2);}
 .fpick{display:flex;align-items:center;gap:10px;padding:13px 14px;
@@ -112,12 +111,17 @@ input[type=file]{display:none;}
 .section-label{font-size:11px;font-weight:700;color:var(–muted);letter-spacing:.8px;text-transform:uppercase;margin-bottom:10px;}
 .replace-hint{font-size:11px;color:var(–muted);background:var(–card2);border-radius:8px;padding:10px 12px;line-height:1.7;margin-bottom:12px;}
 
+/* DESKTOP WARNING */
+.desktop-only-banner{background:#fef3c7;border:1.5px solid #fcd34d;border-radius:12px;
+padding:14px 16px;font-size:12px;color:#78350f;line-height:1.8;margin-bottom:4px;}
+.desktop-only-banner strong{display:block;font-size:14px;margin-bottom:4px;}
+
 /* progress */
 .prog-wrap{display:none;flex-direction:column;gap:8px;border-radius:10px;padding:14px;margin-top:4px;}
 .prog-wrap.show{display:flex;}
 .prog-wrap.blue{background:#eff6ff;border:1px solid #bfdbfe;}
 .prog-wrap.grey{background:var(–card2);border:1px solid var(–border);}
-.prog-lbl{font-size:12px;font-weight:700;}
+.prog-lbl{font-size:12px;font-weight:700;color:var(–blue);}
 .prog-sub{font-size:11px;color:var(–muted);}
 .prog-track{height:6px;background:rgba(0,0,0,.1);border-radius:3px;overflow:hidden;}
 .prog-fill{height:100%;background:var(–blue);border-radius:3px;width:0%;transition:width .2s;}
@@ -164,17 +168,12 @@ letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,.75);line-hei
 padding:12px 28px;border-radius:30px;background:rgba(255,255,255,.95);
 color:var(–text);font-size:13px;font-weight:700;
 box-shadow:0 4px 20px rgba(0,0,0,.25);pointer-events:none;z-index:301;transition:all .3s;
-text-align:center;max-width:85vw;white-space:normal;}
+text-align:center;max-width:85vw;}
 #status-pill.found{background:var(–green);color:#fff;}
 #btn-ar-back{pointer-events:all;position:fixed;top:16px;right:16px;z-index:305;
 background:rgba(255,255,255,.92);border:none;color:var(–text);
 font-size:12px;font-weight:700;padding:9px 16px;border-radius:20px;cursor:pointer;
 box-shadow:0 2px 8px rgba(0,0,0,.2);-webkit-appearance:none;}
-/* now playing card */
-#now-playing{position:fixed;bottom:36%;left:50%;transform:translateX(-50%);
-background:rgba(0,0,0,.7);color:#fff;padding:8px 18px;border-radius:20px;
-font-size:12px;font-weight:600;pointer-events:none;z-index:302;
-display:none;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);}
 
 /* LOGIN */
 #s-admin-login{background:var(–bg);justify-content:center;align-items:center;padding:20px;}
@@ -196,12 +195,36 @@ border:2px solid rgba(255,255,255,.15);}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 #toast.ok{background:#15803d;}
 #toast.err{background:#b91c1c;}
+
+/* DESKTOP ADMIN */
+#s-desktop-admin{background:#f1f5f9;overflow-y:auto;}
+.desktop-wrap{width:100%;max-width:700px;padding:24px 20px 80px;}
+.d-header{background:#fff;border-radius:14px;padding:20px 24px;margin-bottom:20px;
+box-shadow:var(–shadow);display:flex;align-items:center;justify-content:space-between;flex-wrap:gap;}
+.d-header h2{font-family:‘Nunito’,sans-serif;font-size:22px;font-weight:900;color:var(–blue);}
+.d-pairs{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+@media(max-width:500px){.d-pairs{grid-template-columns:1fr;}}
+.d-card{background:#fff;border-radius:12px;overflow:hidden;box-shadow:var(–shadow);border:1.5px solid var(–border);}
+.d-card img{width:100%;height:140px;object-fit:cover;background:var(–bg);}
+.d-card-ph{width:100%;height:140px;background:var(–card2);display:flex;align-items:center;justify-content:center;font-size:40px;}
+.d-card-body{padding:14px;}
+.d-card-title{font-family:‘Nunito’,sans-serif;font-size:14px;font-weight:800;margin-bottom:4px;}
+.d-card-cat{font-size:10px;font-weight:700;color:#92400e;background:var(–amber-bg);padding:2px 8px;border-radius:10px;text-transform:uppercase;display:inline-block;margin-bottom:8px;}
+.d-card-status{font-size:11px;margin-bottom:10px;}
+.d-card-btns{display:flex;gap:8px;}
+.d-btn{flex:1;padding:8px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;border:none;-webkit-appearance:none;text-align:center;}
+.d-btn.edit{background:#eff6ff;color:var(–blue);}
+.d-btn.del{background:var(–red-bg);color:var(–red);}
+
+/* compile status inline */
+.inline-status{font-size:12px;color:var(–muted);padding:10px 14px;background:var(–card2);
+border-radius:8px;line-height:1.7;border-left:3px solid var(–blue);}
 </style>
 
 </head>
 <body>
 
-<!-- LIBRARY -->
+<!-- LIBRARY (iPhone view) -->
 
 <div id="s-library" class="screen">
   <div class="topbar">
@@ -209,20 +232,15 @@ border:2px solid rgba(255,255,255,.15);}
     <button class="tb-btn" onclick="showScreen('s-admin-login')">🔐 Admin</button>
   </div>
   <div class="wrap">
-    <!-- BIG SCAN ALL BUTTON -->
     <button class="scan-all-btn" id="scan-all-btn" onclick="launchScanAll()">
       📷 Scan Any Photo
       <span class="count" id="scan-count">0 pairs</span>
     </button>
-
-```
-<div class="search-bar">
-  <input class="search-input" id="search-inp" placeholder="🔍 Search…" oninput="renderLib()">
-  <select class="filter-sel" id="cat-filter" onchange="renderLib()"><option value="">All</option></select>
-</div>
-<div id="pairs-list" class="pairs-grid"></div>
-```
-
+    <div class="search-bar">
+      <input class="search-input" id="search-inp" placeholder="🔍 Search…" oninput="renderLib()">
+      <select class="filter-sel" id="cat-filter" onchange="renderLib()"><option value="">All</option></select>
+    </div>
+    <div id="pairs-list" class="pairs-grid"></div>
   </div>
 </div>
 
@@ -244,18 +262,25 @@ border:2px solid rgba(255,255,255,.15);}
   </div>
 </div>
 
-<!-- ADMIN -->
+<!-- ADMIN: iPhone shows warning, Desktop shows full panel -->
 
 <div id="s-admin" class="screen hidden">
   <div class="topbar">
     <div><div class="logo">⚙️ Admin</div><div class="logo-sub">Manage AR Pairs</div></div>
     <div style="display:flex;gap:8px">
-      <button class="tb-btn primary" onclick="openAdd()">+ Add</button>
+      <button class="tb-btn primary" id="add-btn-topbar" onclick="openAdd()">+ Add</button>
       <button class="tb-btn" onclick="showScreen('s-library')">← Exit</button>
     </div>
   </div>
   <div class="wrap">
     <div class="debug-card"><div class="debug-head">Connection Status</div><div id="debug-info">Checking…</div></div>
+    <!-- iPhone warning -->
+    <div class="desktop-only-banner" id="mobile-warning" style="display:none">
+      <strong>⚠️ Use a laptop/desktop to Add pairs</strong>
+      The AR target builder uses GPU processing that only works on desktop Chrome or Edge.<br><br>
+      On your <b>laptop</b>: open this same URL → Admin → + Add<br>
+      On your <b>iPhone</b>: just tap 📷 Scan to use the app!
+    </div>
     <div id="admin-list" class="pairs-grid"></div>
   </div>
 </div>
@@ -282,12 +307,11 @@ border:2px solid rgba(255,255,255,.15);}
       <div id="beam"></div>
     </div>
   </div>
-  <div id="now-playing"></div>
-  <div id="status-pill">🔍 Point camera at any photo</div>
+  <div id="status-pill">🔍 Point camera at your photo</div>
   <button id="btn-ar-back" onclick="stopAR()">✕ Back</button>
 </div>
 
-<!-- MODAL: ADD -->
+<!-- MODAL: ADD (desktop only) -->
 
 <div class="modal-back hidden" id="modal-add">
   <div class="modal">
@@ -299,14 +323,14 @@ border:2px solid rgba(255,255,255,.15);}
     <div class="field">
       <label>📷 Target Photo *</label>
       <button class="fpick" id="fpick-photo" onclick="document.getElementById('inp-add-photo').click()">
-        <span class="fi">📷</span><div class="fl">Tap to choose photo<div class="fs" id="fs-add-photo"></div></div>
+        <span class="fi">📷</span><div class="fl">Choose photo<div class="fs" id="fs-add-photo"></div></div>
       </button>
       <input type="file" id="inp-add-photo" accept="image/*" onchange="addFilePick('photo',this)">
     </div>
     <div class="field">
       <label>🎬 Video * (max 50MB)</label>
       <button class="fpick" id="fpick-video" onclick="document.getElementById('inp-add-video').click()">
-        <span class="fi">🎬</span><div class="fl">Tap to choose video<div class="fs" id="fs-add-video"></div></div>
+        <span class="fi">🎬</span><div class="fl">Choose video<div class="fs" id="fs-add-video"></div></div>
       </button>
       <input type="file" id="inp-add-video" accept="video/*" onchange="addFilePick('video',this)">
     </div>
@@ -340,7 +364,7 @@ border:2px solid rgba(255,255,255,.15);}
     <div class="field"><label>Description</label><textarea id="e-desc"></textarea></div>
     <hr class="section-divider">
     <div class="section-label">Replace Files (optional)</div>
-    <div class="replace-hint">Leave blank to keep existing files. Tap only if you want to replace.</div>
+    <div class="replace-hint">Leave blank to keep existing. Tap only to replace.</div>
     <div class="field">
       <label>📷 Replace Photo</label>
       <button class="fpick" id="epick-photo" onclick="document.getElementById('inp-edit-photo').click()">
@@ -391,14 +415,18 @@ border:2px solid rgba(255,255,255,.15);}
 <div id="toast"></div>
 
 <script>
-// ══════════ CONFIG ══════════
+// ══════ CONFIG ══════
 const SUPA_URL='https://phtxvaxdfgpvghvhvoyr.supabase.co';
 const SUPA_PUB='sb_publishable_yzcDb1VE0a9CJi2Oi4qlNg_zmYrMorL';
 const SUPA_JWT='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBodHh2YXhkZmdwdmdodmh2b3lyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM4NDI5MzUsImV4cCI6MjA4OTQxODkzNX0.Y1EizV1-y0MnsxBjxOpg74HY14G_SF19zg1evpdpu3M';
 const ADMIN_PW='Phuapengming45679';
 const PH_BKT='ar-photos',VD_BKT='ar-videos',MD_BKT='ar-minds';
 
-// ══════════ API ══════════
+// Detect iOS
+const isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent)&&!window.MSStream;
+const isMobile=/Mobi|Android/i.test(navigator.userAgent)||isIOS;
+
+// ══════ API ══════
 const API=(path,opts={})=>fetch(`${SUPA_URL}/rest/v1/${path}`,{
   headers:{'apikey':SUPA_PUB,'Authorization':'Bearer '+SUPA_JWT,
     'Content-Type':'application/json','Prefer':'return=representation',...(opts.headers||{})}, ...opts});
@@ -424,47 +452,46 @@ function upload(bkt,path,file,onP){
     r.readAsArrayBuffer(file);
   });
 }
-
 const delPaths=(bkt,paths)=>fetch(`${SUPA_URL}/storage/v1/object/${bkt}`,
   {method:'DELETE',headers:{'apikey':SUPA_PUB,'Authorization':'Bearer '+SUPA_JWT,'Content-Type':'application/json'},
    body:JSON.stringify({prefixes:paths})});
 
-// ══════════ STATE ══════════
+// ══════ STATE ══════
 let pairs=[],delTarget=null,editTarget=null,arScene=null;
 let addPhoto=null,addVideo=null,editPhoto=null,editVideo=null;
-let COMPILER_READY=false;
+let compilerScript=null,COMPILER_READY=false;
 
-// ══════════ INIT ══════════
+// ══════ INIT ══════
 document.addEventListener('DOMContentLoaded',()=>{
   loadPairs();
-  // Pre-load compiler script in background
-  const s=document.createElement('script');
-  s.src='https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image.prod.js';
-  s.onload=()=>{COMPILER_READY=true;console.log('Compiler ready');};
-  s.onerror=()=>console.warn('Compiler failed to load');
-  document.head.appendChild(s);
+  // Only load compiler on desktop
+  if(!isMobile){
+    compilerScript=document.createElement('script');
+    compilerScript.src='https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image.prod.js';
+    compilerScript.onload=()=>{COMPILER_READY=true;};
+    document.head.appendChild(compilerScript);
+  }
 });
 
-// ══════════ LOAD ══════════
+// ══════ LOAD ══════
 async function loadPairs(){
   try{
     const r=await API('ar_pairs?order=created_at.desc');
     if(!r.ok)throw new Error('HTTP '+r.status);
     pairs=await r.json();
     renderLib();renderAdmin();populateCats();
-    // Update scan button count
     const ready=pairs.filter(p=>p.mind_url).length;
     document.getElementById('scan-count').textContent=ready+' pair'+(ready!==1?'s':'');
   }catch(e){showToast('Load failed: '+e.message,'err');}
 }
 
-// ══════════ RENDER ══════════
+// ══════ RENDER LIB ══════
 function renderLib(){
   const q=document.getElementById('search-inp').value.toLowerCase();
   const cat=document.getElementById('cat-filter').value;
   const list=pairs.filter(p=>(!q||p.title.toLowerCase().includes(q)||(p.category||'').toLowerCase().includes(q))&&(!cat||p.category===cat));
   const el=document.getElementById('pairs-list');
-  if(!list.length){el.innerHTML=`<div class="empty"><p>${pairs.length?'No results.':'No AR pairs yet.<br>Admin can add some!'}</p></div>`;return;}
+  if(!list.length){el.innerHTML=`<div class="empty"><p>${pairs.length?'No results.':'No AR pairs yet.<br>Add some from a laptop in Admin!'}</p></div>`;return;}
   el.innerHTML=list.map(p=>`
     <div class="pair-card">
       ${p.photo_url?`<img class="pair-thumb" src="${p.photo_url}" loading="lazy" onerror="this.style.display='none'">`:`<div class="pair-thumb-ph">📷</div>`}
@@ -474,24 +501,38 @@ function renderLib(){
         ${p.description?`<div class="pair-desc">${p.description}</div>`:''}
         <div class="pair-footer">
           <span class="pair-date">${fmtDate(p.created_at)}</span>
-          <button class="play-chip" onclick="launchSingle('${p.id}')">▶ Scan this</button>
+          <button class="play-chip" onclick="launchSingle('${p.id}')">▶ Scan</button>
         </div>
       </div>
     </div>`).join('');
 }
 
+// ══════ RENDER ADMIN ══════
 function renderAdmin(){
+  // Show/hide mobile warning
+  const warn=document.getElementById('mobile-warning');
+  const addBtn=document.getElementById('add-btn-topbar');
+  if(isMobile){
+    warn.style.display='block';
+    addBtn.style.opacity='0.4';
+    addBtn.onclick=()=>showToast('⚠️ Open this page on a laptop/desktop to add AR pairs','err');
+  } else {
+    warn.style.display='none';
+    addBtn.style.opacity='1';
+    addBtn.onclick=openAdd;
+  }
+
   const el=document.getElementById('admin-list');
-  if(!pairs.length){el.innerHTML=`<div class="empty"><p>No pairs yet. Tap <b>+ Add</b>.</p></div>`;return;}
+  if(!pairs.length){el.innerHTML=`<div class="empty"><p>No pairs yet. Tap <b>+ Add</b> on a desktop.</p></div>`;return;}
   el.innerHTML=pairs.map(p=>`
     <div class="pair-card" style="cursor:default">
       ${p.photo_url?`<img class="pair-thumb" src="${p.photo_url}" loading="lazy" onerror="this.style.display='none'">`:`<div class="pair-thumb-ph">📷</div>`}
       <div class="pair-info">
         <span class="pair-cat">${p.category||'General'}</span>
-        <div class="pair-title">${p.title} ${p.mind_url?'✅':'⚠️'}</div>
+        <div class="pair-title">${p.title} ${p.mind_url?'✅':'⚠️ No AR target'}</div>
         ${p.description?`<div class="pair-desc">${p.description}</div>`:''}
         <div class="pair-footer" style="gap:6px">
-          <button class="edit-btn" onclick="openEdit('${p.id}')">✏️ Edit</button>
+          <button class="edit-btn" onclick="${isMobile?`showToast('Open on laptop to edit','err')`:`openEdit('${p.id}')`}">✏️ Edit</button>
           <button class="del-btn" onclick="openDel('${p.id}')">🗑 Delete</button>
         </div>
       </div>
@@ -505,151 +546,96 @@ function populateCats(){
   sel.innerHTML='<option value="">All Categories</option>'+cats.map(c=>`<option value="${c}"${c===cur?' selected':''}>${c}</option>`).join('');
 }
 
-// ══════════ MULTI-TARGET SCAN ALL ══════════
+// ══════ AR SCAN ALL ══════
 async function launchScanAll(){
   const ready=pairs.filter(p=>p.mind_url);
-  if(!ready.length){showToast('No AR pairs ready yet. Add some in Admin first.','err');return;}
-  showScreen('s-loading');
-  setLD(20,'Loading AR Scanner',`Loading ${ready.length} target${ready.length>1?'s':''}…`);
-  await pause(300);
-  setLD(60,'Building scene…','Almost ready…');
-  await pause(300);
-  setLD(100,'Launching!','');
-  await pause(300);
-  startMultiAR(ready);
+  if(!ready.length){showToast('No AR pairs ready. Add some from a laptop first.','err');return;}
+  // Launch first available pair
+  launchSingle(ready[0].id);
 }
 
 async function launchSingle(id){
   const pair=pairs.find(p=>p.id===id);
   if(!pair)return;
-  if(!pair.mind_url){showToast('⚠️ This pair has no AR target. Edit it in Admin to rebuild.','err');return;}
+  if(!pair.mind_url){showToast('⚠️ This pair has no AR target yet. Edit it from a laptop.','err');return;}
   showScreen('s-loading');
-  setLD(50,pair.title,'Loading AR…');
-  await pause(500);
-  setLD(100,pair.title,'Launching!');
-  await pause(300);
-  startMultiAR([pair]);
+  setLD(40,pair.title,'Loading AR…');await pause(400);
+  setLD(80,pair.title,'Starting camera…');await pause(300);
+  setLD(100,pair.title,'Launching!');await pause(200);
+  startARScene(pair.mind_url,pair.video_url,pair.title);
 }
 
-// ══════════ MULTI-TARGET AR ENGINE ══════════
-function startMultiAR(activePairs){
+// ══════ AR ENGINE ══════
+function startARScene(mindURL,videoURL,title){
   showScreen('s-ar');
-  const isMulti=activePairs.length>1;
-  document.getElementById('ar-hud-top').innerHTML=
-    `📸 AR Magic<br><span id="hud-state">SCANNING…</span>`;
-  document.getElementById('status-pill').textContent=
-    isMulti?`🔍 Point at any of your ${activePairs.length} photos`:'🔍 Point camera at your photo';
-
+  document.getElementById('ar-hud-top').innerHTML=`📸 ${title||'AR'}<br><span id="hud-state">SCANNING…</span>`;
   const wrap=document.getElementById('ar-wrap');
   wrap.innerHTML='';
-
-  // Build mind sources string — MindAR supports multiple .mind files
-  // We compile them together by listing all mind URLs
-  // Actually MindAR takes ONE .mind file with multiple targets
-  // For multi-target: we use the first pair's mind and add multiple targets
-  // Real approach: use separate a-scene per target with switching
-  // Simplest reliable approach: load all minds as separate scenes, show active one
-
   const scene=document.createElement('a-scene');
-  // Use first available mind as source (single target mode for reliability)
-  // For multi: we'll use targetIndex approach with compiled multi-mind
-  scene.setAttribute('mindar-image',
-    `imageTargetSrc: ${activePairs[0].mind_url}; autoStart: true; uiLoading: no; uiError: no; uiScanning: no;`+
-    (activePairs.length>1?` filterMinCF: 0.001; filterBeta: 1000;`:''));
+  scene.setAttribute('mindar-image',`imageTargetSrc: ${mindURL}; autoStart: true; uiLoading: no; uiError: no; uiScanning: no;`);
   scene.setAttribute('color-space','sRGB');
   scene.setAttribute('renderer','colorManagement: true, physicallyCorrectLights');
   scene.setAttribute('vr-mode-ui','enabled: false');
   scene.setAttribute('device-orientation-permission-ui','enabled: false');
   scene.setAttribute('embedded','');
-
   const assets=document.createElement('a-assets');
-
-  // Create video elements for each pair
-  activePairs.forEach((p,i)=>{
-    const v=document.createElement('video');
-    v.id=`arvid${i}`;v.src=p.video_url;
-    v.setAttribute('loop','true');v.setAttribute('crossorigin','anonymous');
-    v.setAttribute('muted','');v.setAttribute('playsinline','');
-    v.setAttribute('webkit-playsinline','');v.preload='auto';
-    assets.appendChild(v);
-  });
-  scene.appendChild(assets);
-
+  const v=document.createElement('video');
+  v.id='arvid';v.src=videoURL;v.setAttribute('loop','true');
+  v.setAttribute('crossorigin','anonymous');v.setAttribute('muted','');
+  v.setAttribute('playsinline','');v.setAttribute('webkit-playsinline','');v.preload='auto';
+  assets.appendChild(v);scene.appendChild(assets);
   const cam=document.createElement('a-camera');
   cam.setAttribute('position','0 0 0');cam.setAttribute('look-controls','enabled: false');
   scene.appendChild(cam);
-
-  // For single pair — standard approach
   const target=document.createElement('a-entity');
-  target.id='ar-target-0';
-  target.setAttribute('mindar-image-target','targetIndex: 0');
+  target.id='ar-target';target.setAttribute('mindar-image-target','targetIndex: 0');
   const plane=document.createElement('a-video');
-  plane.setAttribute('src','#arvid0');plane.setAttribute('position','0 0 0.001');
+  plane.setAttribute('src','#arvid');plane.setAttribute('position','0 0 0.001');
   plane.setAttribute('width','1');plane.setAttribute('height','0.5625');
   target.appendChild(plane);scene.appendChild(target);
-
   wrap.appendChild(scene);arScene=scene;
-
   scene.addEventListener('loaded',()=>{
-    const t=document.getElementById('ar-target-0');
-    const vid=document.getElementById('arvid0');
+    const t=document.getElementById('ar-target');
+    const vid=document.getElementById('arvid');
     const pill=document.getElementById('status-pill');
-    const nowPlaying=document.getElementById('now-playing');
-
     t.addEventListener('targetFound',()=>{
-      // Stop all other videos, play this one
-      activePairs.forEach((_,i)=>{
-        const v=document.getElementById(`arvid${i}`);
-        if(v&&i!==0){v.pause();v.muted=true;}
-      });
       vid.muted=false;vid.play().catch(()=>{vid.muted=true;vid.play();});
-      pill.textContent='✅ Playing: '+activePairs[0].title;
+      pill.textContent='✅ Found — Playing: '+title;
       pill.classList.add('found');
-      nowPlaying.textContent='▶ '+activePairs[0].title;
-      nowPlaying.style.display='block';
       try{document.getElementById('hud-state').textContent='LOCKED ✓';}catch(e){}
       document.getElementById('beam').style.cssText='animation-play-state:paused;opacity:0';
     });
     t.addEventListener('targetLost',()=>{
       vid.pause();vid.muted=true;
-      pill.textContent=isMulti?`🔍 Point at any of your ${activePairs.length} photos`:'🔍 Point camera at your photo';
+      pill.textContent='🔍 Point camera at your photo';
       pill.classList.remove('found');
-      nowPlaying.style.display='none';
       try{document.getElementById('hud-state').textContent='SCANNING…';}catch(e){}
       document.getElementById('beam').style.cssText='';
     });
   });
-
-  scene.addEventListener('arError',()=>{
-    stopAR();showToast('AR failed to start. Try again.','err');
-  });
+  scene.addEventListener('arError',()=>{stopAR();showToast('AR failed to start.','err');});
 }
 
 function stopAR(){
-  if(arScene){
-    try{const s=arScene.systems&&arScene.systems['mindar-image-system'];if(s)s.stop();}catch(e){}
-    document.getElementById('ar-wrap').innerHTML='';arScene=null;
-  }
-  document.getElementById('now-playing').style.display='none';
+  if(arScene){try{const s=arScene.systems&&arScene.systems['mindar-image-system'];if(s)s.stop();}catch(e){}
+    document.getElementById('ar-wrap').innerHTML='';arScene=null;}
   showScreen('s-library');
 }
 
-// ══════════ COMPILE ══════════
+// ══════ COMPILE (desktop only) ══════
 async function compileMind(imgFile,fillEl,lblEl,subEl,pctEl){
-  // Wait for compiler
+  if(isMobile)throw new Error('Compilation not supported on mobile. Use a laptop.');
   let w=0;
   while(!COMPILER_READY||typeof MINDAR==='undefined'||!MINDAR.IMAGE||!MINDAR.IMAGE.Compiler){
     await pause(500);w+=500;
-    if(w>25000)throw new Error('AR compiler not loaded. Ensure you are on desktop Chrome/Edge with internet connection.');
+    if(w>25000)throw new Error('AR compiler not loaded. Use Chrome or Edge on desktop.');
   }
   const img=new Image();
   img.src=URL.createObjectURL(imgFile);
   await new Promise((res,rej)=>{img.onload=res;img.onerror=rej;});
   const compiler=new MINDAR.IMAGE.Compiler();
-  let lastPct=0;
   await compiler.compileImageTargets([img],(prog)=>{
     const pct=Math.min(Math.round(Math.min(Math.max(prog,0),1)*100),100);
-    if(pct>lastPct){lastPct=pct;}
     if(fillEl)fillEl.style.width=pct+'%';
     if(lblEl)lblEl.textContent=`🧠 Building AR target… ${pct}%`;
     if(pctEl)pctEl.textContent=pct+'%';
@@ -657,13 +643,14 @@ async function compileMind(imgFile,fillEl,lblEl,subEl,pctEl){
   return compiler.exportData();
 }
 
-// ══════════ ADD ══════════
+// ══════ ADD ══════
 function openAdd(){
+  if(isMobile){showToast('⚠️ Open on a laptop/desktop to add AR pairs','err');return;}
   addPhoto=null;addVideo=null;
   ['photo','video'].forEach(t=>{
     const b=document.getElementById(`fpick-${t}`);
     b.className='fpick';
-    b.querySelector('.fl').childNodes[0].textContent=`Tap to choose ${t}`;
+    b.querySelector('.fl').childNodes[0].textContent=`Choose ${t}`;
     document.getElementById(`fs-add-${t}`).textContent='';
   });
   ['f-title','f-cat','f-desc'].forEach(id=>document.getElementById(id).value='');
@@ -685,6 +672,7 @@ function addFilePick(type,inp){
 }
 
 async function saveAdd(){
+  if(isMobile){showToast('Use a laptop to add pairs','err');return;}
   const title=document.getElementById('f-title').value.trim();
   if(!title){showToast('Title required','err');return;}
   if(!addPhoto){showToast('Choose a photo','err');return;}
@@ -697,8 +685,6 @@ async function saveAdd(){
     const pn=`${ts}_${addPhoto.name.replace(/[^a-zA-Z0-9._-]/g,'_')}`;
     const vn=`${ts}_${addVideo.name.replace(/[^a-zA-Z0-9._-]/g,'_')}`;
     const mn=`${ts}_target.mind`;
-
-    // Compile
     cW.classList.add('show');
     const mindBuf=await compileMind(addPhoto,
       document.getElementById('add-compile-fill'),
@@ -706,22 +692,18 @@ async function saveAdd(){
       document.getElementById('add-compile-sub'),
       document.getElementById('add-compile-pct'));
     cW.classList.remove('show');
-
-    // Upload
     uW.classList.add('show');
     setProg('add-up','Step 1/3 — Uploading photo…',addPhoto.name,0);
-    await upload(PH_BKT,pn,addPhoto,p=>setProg('add-up','Step 1/3 — Uploading photo…',Math.round(p*100)+'%',p*30));
+    await upload(PH_BKT,pn,addPhoto,p=>setProg('add-up','Uploading photo…',Math.round(p*100)+'%',p*30));
     setProg('add-up','Step 2/3 — Uploading video…',addVideo.name,31);
-    await upload(VD_BKT,vn,addVideo,p=>setProg('add-up','Step 2/3 — Uploading video…',Math.round(p*100)+'%',31+p*40));
+    await upload(VD_BKT,vn,addVideo,p=>setProg('add-up','Uploading video…',Math.round(p*100)+'%',31+p*40));
     setProg('add-up','Step 3/3 — Uploading AR target…','targets.mind',72);
     const mf=new File([new Blob([mindBuf])],'targets.mind',{type:'application/octet-stream'});
-    await upload(MD_BKT,mn,mf,p=>setProg('add-up','Step 3/3 — Uploading AR target…',Math.round(p*100)+'%',72+p*20));
+    await upload(MD_BKT,mn,mf,p=>setProg('add-up','Uploading AR target…',Math.round(p*100)+'%',72+p*20));
     setProg('add-up','Saving to library…','Almost done!',93);
-
     const pURL=`${SUPA_URL}/storage/v1/object/public/${PH_BKT}/${pn}`;
     const vURL=`${SUPA_URL}/storage/v1/object/public/${VD_BKT}/${vn}`;
     const mURL=`${SUPA_URL}/storage/v1/object/public/${MD_BKT}/${mn}`;
-
     const res=await API('ar_pairs',{method:'POST',body:JSON.stringify({
       title,category:document.getElementById('f-cat').value.trim()||'General',
       description:document.getElementById('f-desc').value.trim(),
@@ -735,8 +717,9 @@ async function saveAdd(){
   finally{document.getElementById('btn-save-add').disabled=false;uW.classList.remove('show');cW.classList.remove('show');}
 }
 
-// ══════════ EDIT ══════════
+// ══════ EDIT ══════
 function openEdit(id){
+  if(isMobile){showToast('⚠️ Open on a laptop to edit pairs','err');return;}
   editTarget=id;editPhoto=null;editVideo=null;
   const p=pairs.find(x=>x.id===id);if(!p)return;
   document.getElementById('e-title').value=p.title||'';
@@ -766,6 +749,7 @@ function editFilePick(type,inp){
 }
 
 async function saveEdit(){
+  if(isMobile){showToast('Use a laptop to edit','err');return;}
   if(!editTarget)return;
   const title=document.getElementById('e-title').value.trim();
   if(!title){showToast('Title required','err');return;}
@@ -776,7 +760,6 @@ async function saveEdit(){
   try{
     const ts=Date.now();
     let pURL=p.photo_url,vURL=p.video_url,mURL=p.mind_url;
-
     if(editPhoto){
       cW.classList.add('show');
       const mindBuf=await compileMind(editPhoto,
@@ -791,12 +774,11 @@ async function saveEdit(){
       setProg('edit-up','Uploading new photo…',editPhoto.name,0);
       await upload(PH_BKT,pn,editPhoto,prog=>setProg('edit-up','Uploading photo…',Math.round(prog*100)+'%',prog*30));
       pURL=`${SUPA_URL}/storage/v1/object/public/${PH_BKT}/${pn}`;
-      setProg('edit-up','Uploading AR target…','targets.mind',31);
       const mf=new File([new Blob([mindBuf])],'targets.mind',{type:'application/octet-stream'});
+      setProg('edit-up','Uploading AR target…','',31);
       await upload(MD_BKT,mn,mf,prog=>setProg('edit-up','Uploading AR target…',Math.round(prog*100)+'%',31+prog*30));
       mURL=`${SUPA_URL}/storage/v1/object/public/${MD_BKT}/${mn}`;
     } else {uW.classList.add('show');}
-
     if(editVideo){
       const vn=`${ts}_${editVideo.name.replace(/[^a-zA-Z0-9._-]/g,'_')}`;
       const sp=editPhoto?62:0;
@@ -804,7 +786,6 @@ async function saveEdit(){
       await upload(VD_BKT,vn,editVideo,prog=>setProg('edit-up','Uploading video…',Math.round(prog*100)+'%',sp+prog*(editPhoto?30:90)));
       vURL=`${SUPA_URL}/storage/v1/object/public/${VD_BKT}/${vn}`;
     }
-
     setProg('edit-up','Saving…','Almost done!',93);
     const res=await API(`ar_pairs?id=eq.${editTarget}`,{method:'PATCH',body:JSON.stringify({
       title,category:document.getElementById('e-cat').value.trim()||'General',
@@ -819,7 +800,7 @@ async function saveEdit(){
   finally{document.getElementById('btn-save-edit').disabled=false;uW.classList.remove('show');cW.classList.remove('show');}
 }
 
-// ══════════ DELETE ══════════
+// ══════ DELETE ══════
 function openDel(id){delTarget=id;document.getElementById('modal-del').classList.remove('hidden');}
 function closeDel(){delTarget=null;document.getElementById('modal-del').classList.add('hidden');}
 async function confirmDel(){
@@ -833,8 +814,7 @@ async function confirmDel(){
       if(p.video_url){const f=p.video_url.split(`/${VD_BKT}/`)[1];if(f)delPaths(VD_BKT,[f]).catch(()=>{});}
       if(p.mind_url){const f=p.mind_url.split(`/${MD_BKT}/`)[1];if(f)delPaths(MD_BKT,[f]).catch(()=>{});}
     }
-    pairs=pairs.filter(x=>x.id!==id);
-    renderAdmin();renderLib();populateCats();
+    pairs=pairs.filter(x=>x.id!==id);renderAdmin();renderLib();populateCats();
     const ready=pairs.filter(p=>p.mind_url).length;
     document.getElementById('scan-count').textContent=ready+' pair'+(ready!==1?'s':'');
     showToast('✅ Deleted!','ok');loadPairs();
@@ -842,7 +822,7 @@ async function confirmDel(){
   delTarget=null;
 }
 
-// ══════════ LOGIN ══════════
+// ══════ LOGIN ══════
 function doLogin(){
   if(document.getElementById('pw-input').value===ADMIN_PW){
     document.getElementById('pw-input').value='';
@@ -852,11 +832,13 @@ function doLogin(){
 }
 async function testConn(){
   const el=document.getElementById('debug-info');
-  try{const r=await API('ar_pairs?limit=1');el.innerHTML=r.ok?`✅ Connected · ${pairs.length} pair(s)`:`❌ HTTP ${r.status}`;}
+  try{const r=await API('ar_pairs?limit=1');
+    el.innerHTML=r.ok?`✅ Connected · ${pairs.length} pair(s) · ${isMobile?'📱 Mobile (scan only)':'💻 Desktop (full access)'}`:
+    `❌ HTTP ${r.status}`;}
   catch(e){el.innerHTML='❌ '+e.message;}
 }
 
-// ══════════ HELPERS ══════════
+// ══════ HELPERS ══════
 function showScreen(id){
   ['s-library','s-admin-login','s-admin','s-loading','s-ar'].forEach(s=>
     document.getElementById(s).classList.toggle('hidden',s!==id));
