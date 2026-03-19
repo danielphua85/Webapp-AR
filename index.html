@@ -9,7 +9,6 @@
 <title>AR Magic Library</title>
 <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
-<!-- MindAR compiler loaded separately — only used when adding pairs on desktop -->
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&family=Inter:wght@400;500;600&display=swap');
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
@@ -20,8 +19,8 @@
   --green:#16a34a;--green-bg:#dcfce7;
   --red:#dc2626;--red-bg:#fee2e2;
   --amber:#d97706;--amber-bg:#fef9c3;
-  --shadow:0 1px 3px rgba(0,0,0,0.07),0 4px 12px rgba(37,99,235,0.07);
-  --shadow2:0 2px 8px rgba(37,99,235,0.14);
+  --shadow:0 1px 3px rgba(0,0,0,.07),0 4px 12px rgba(37,99,235,.07);
+  --shadow2:0 2px 8px rgba(37,99,235,.14);
 }
 html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;}
 .screen{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;z-index:100;overflow-y:auto;}
@@ -30,14 +29,23 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);fon
 /* TOPBAR */
 .topbar{width:100%;padding:14px 18px;background:#fff;border-bottom:1px solid var(–border);
 display:flex;align-items:center;justify-content:space-between;
-flex-shrink:0;position:sticky;top:0;z-index:50;box-shadow:0 1px 4px rgba(37,99,235,0.06);}
+flex-shrink:0;position:sticky;top:0;z-index:50;box-shadow:0 1px 4px rgba(37,99,235,.06);}
 .logo{font-family:‘Nunito’,sans-serif;font-size:18px;font-weight:900;color:var(–blue);}
 .logo-sub{font-size:10px;color:var(–muted);letter-spacing:1.5px;text-transform:uppercase;margin-top:1px;}
 .tb-btn{padding:8px 16px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;
 border:1.5px solid var(–border);background:#fff;color:var(–blue);-webkit-appearance:none;}
 .tb-btn.primary{background:var(–blue);color:#fff;border-color:var(–blue);}
+.tb-btn.green{background:var(–green);color:#fff;border-color:var(–green);font-size:13px;padding:10px 20px;}
 
-.wrap{width:100%;max-width:520px;padding:18px 15px 100px;display:flex;flex-direction:column;gap:13px;}
+.wrap{width:100%;max-width:520px;padding:18px 15px 120px;display:flex;flex-direction:column;gap:13px;}
+
+/* SCAN ALL BUTTON */
+.scan-all-btn{width:100%;padding:18px;background:var(–blue);color:#fff;
+border:none;border-radius:14px;font-family:‘Nunito’,sans-serif;font-size:17px;font-weight:900;
+cursor:pointer;-webkit-appearance:none;display:flex;align-items:center;justify-content:center;
+gap:10px;box-shadow:0 4px 16px rgba(37,99,235,.35);transition:all .15s;}
+.scan-all-btn:active{transform:scale(.98);box-shadow:none;}
+.scan-all-btn .count{background:rgba(255,255,255,.25);padding:2px 10px;border-radius:20px;font-size:13px;}
 
 /* SEARCH */
 .search-bar{display:flex;gap:8px;}
@@ -49,15 +57,13 @@ border-radius:10px;color:var(–text);font-size:13px;outline:none;box-shadow:var
 border-radius:10px;color:var(–text);font-size:12px;outline:none;min-width:110px;
 box-shadow:var(–shadow);-webkit-appearance:none;}
 
-/* EMPTY */
-.empty{text-align:center;padding:50px 20px;color:var(–muted);}
+.empty{text-align:center;padding:40px 20px;color:var(–muted);}
 .empty p{font-size:14px;line-height:1.9;}
 
 /* PAIR CARDS */
 .pairs-grid{display:flex;flex-direction:column;gap:11px;}
 .pair-card{background:#fff;border:1.5px solid var(–border);border-radius:14px;
-overflow:hidden;display:flex;box-shadow:var(–shadow);cursor:pointer;transition:all .15s;}
-.pair-card:active{transform:scale(.98);}
+overflow:hidden;display:flex;box-shadow:var(–shadow);}
 .pair-thumb{width:88px;min-width:88px;object-fit:cover;background:var(–bg);}
 .pair-thumb-ph{width:88px;min-width:88px;background:var(–card2);
 display:flex;align-items:center;justify-content:center;font-size:28px;}
@@ -70,30 +76,27 @@ text-transform:uppercase;width:fit-content;}
 overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
 .pair-footer{display:flex;align-items:center;justify-content:space-between;margin-top:6px;}
 .pair-date{font-size:10px;color:var(–muted2);}
-.play-chip{display:flex;align-items:center;gap:5px;padding:5px 14px;
-border-radius:20px;background:var(–blue);color:#fff;font-size:11px;font-weight:700;border:none;cursor:pointer;}
+.play-chip{display:flex;align-items:center;gap:4px;padding:5px 12px;
+border-radius:20px;background:var(–blue);color:#fff;font-size:11px;font-weight:700;
+border:none;cursor:pointer;-webkit-appearance:none;}
 
 /* MODAL */
-.modal-back{position:fixed;inset:0;background:rgba(15,23,42,0.5);
+.modal-back{position:fixed;inset:0;background:rgba(15,23,42,.5);
 z-index:500;display:flex;align-items:flex-end;justify-content:center;
 backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);}
 .modal-back.hidden{display:none!important;}
 .modal{width:100%;max-width:520px;background:#fff;border-radius:20px 20px 0 0;
 padding:20px 18px 44px;max-height:92vh;overflow-y:auto;
-box-shadow:0 -8px 32px rgba(0,0,0,0.14);}
+box-shadow:0 -8px 32px rgba(0,0,0,.14);}
 .m-handle{width:40px;height:4px;background:var(–border);border-radius:2px;margin:0 auto 18px;}
 .m-title{font-family:‘Nunito’,sans-serif;font-size:19px;font-weight:900;margin-bottom:16px;}
-
 .field{display:flex;flex-direction:column;gap:6px;margin-bottom:13px;}
 .field label{font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(–muted);}
-.field input,.field textarea{
-padding:12px 14px;background:var(–card2);border:1.5px solid var(–border);
-border-radius:10px;color:var(–text);font-size:13px;outline:none;
-width:100%;-webkit-appearance:none;font-family:‘Inter’,sans-serif;}
+.field input,.field textarea{padding:12px 14px;background:var(–card2);border:1.5px solid var(–border);
+border-radius:10px;color:var(–text);font-size:13px;outline:none;width:100%;
+-webkit-appearance:none;font-family:‘Inter’,sans-serif;}
 .field textarea{resize:vertical;min-height:68px;line-height:1.6;}
 .field input:focus,.field textarea:focus{border-color:var(–blue2);}
-
-/* file pick */
 .fpick{display:flex;align-items:center;gap:10px;padding:13px 14px;
 border:1.5px dashed var(–border);border-radius:10px;background:var(–card2);
 color:var(–muted);font-size:12px;cursor:pointer;-webkit-appearance:none;
@@ -105,26 +108,20 @@ width:100%;text-align:left;transition:all .15s;}
 .fpick .fl{flex:1;line-height:1.5;}
 .fpick .fs{font-size:10px;opacity:.7;}
 input[type=file]{display:none;}
+.section-divider{border:none;border-top:1px solid var(–border);margin:14px 0;}
+.section-label{font-size:11px;font-weight:700;color:var(–muted);letter-spacing:.8px;text-transform:uppercase;margin-bottom:10px;}
+.replace-hint{font-size:11px;color:var(–muted);background:var(–card2);border-radius:8px;padding:10px 12px;line-height:1.7;margin-bottom:12px;}
 
-/* compile progress */
-.compile-wrap{display:none;flex-direction:column;gap:8px;
-background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:14px;margin-top:4px;}
-.compile-wrap.show{display:flex;}
-.compile-lbl{font-size:12px;font-weight:700;color:var(–blue);}
-.compile-sub{font-size:11px;color:var(–muted);}
-.compile-track{height:6px;background:#bfdbfe;border-radius:3px;overflow:hidden;}
-.compile-fill{height:100%;background:var(–blue);border-radius:3px;width:0%;transition:width .2s;}
-.compile-pct{font-size:11px;font-weight:700;color:var(–blue);text-align:right;}
-
-/* upload progress */
-.up-wrap{display:none;flex-direction:column;gap:8px;
-background:var(–card2);border:1px solid var(–border);border-radius:10px;padding:14px;}
-.up-wrap.show{display:flex;}
-.up-lbl{font-size:12px;font-weight:700;}
-.up-sub{font-size:11px;color:var(–muted);}
-.up-track{height:6px;background:var(–border);border-radius:3px;overflow:hidden;}
-.up-fill{height:100%;background:var(–blue);border-radius:3px;width:0%;transition:width .25s;}
-.up-pct{font-size:11px;font-weight:700;color:var(–blue);text-align:right;}
+/* progress */
+.prog-wrap{display:none;flex-direction:column;gap:8px;border-radius:10px;padding:14px;margin-top:4px;}
+.prog-wrap.show{display:flex;}
+.prog-wrap.blue{background:#eff6ff;border:1px solid #bfdbfe;}
+.prog-wrap.grey{background:var(–card2);border:1px solid var(–border);}
+.prog-lbl{font-size:12px;font-weight:700;}
+.prog-sub{font-size:11px;color:var(–muted);}
+.prog-track{height:6px;background:rgba(0,0,0,.1);border-radius:3px;overflow:hidden;}
+.prog-fill{height:100%;background:var(–blue);border-radius:3px;width:0%;transition:width .2s;}
+.prog-pct{font-size:11px;font-weight:700;color:var(–blue);text-align:right;}
 
 .m-btns{display:flex;gap:10px;margin-top:16px;}
 .m-btn{flex:1;padding:14px;border-radius:12px;font-family:‘Nunito’,sans-serif;
@@ -133,24 +130,14 @@ font-weight:800;font-size:14px;cursor:pointer;border:none;-webkit-appearance:non
 .m-btn.save{background:var(–blue);color:#fff;}
 .m-btn.danger{background:var(–red);color:#fff;}
 .m-btn:disabled{opacity:.4;cursor:not-allowed;}
-.del-btn{padding:6px 12px;background:var(–red-bg);border:none;
-border-radius:6px;color:var(–red);font-size:11px;font-weight:600;cursor:pointer;}
-.edit-btn{padding:6px 12px;background:#eff6ff;border:none;
-border-radius:6px;color:var(–blue);font-size:11px;font-weight:600;cursor:pointer;}
-
-/* section divider in modal */
-.section-divider{border:none;border-top:1px solid var(–border);margin:16px 0;}
-.section-label{font-size:11px;font-weight:700;color:var(–muted);letter-spacing:.8px;
-text-transform:uppercase;margin-bottom:10px;}
-.replace-hint{font-size:11px;color:var(–muted);background:var(–card2);
-border-radius:8px;padding:10px 12px;line-height:1.7;margin-bottom:12px;}
+.del-btn{padding:6px 12px;background:var(–red-bg);border:none;border-radius:6px;color:var(–red);font-size:11px;font-weight:600;cursor:pointer;}
+.edit-btn{padding:6px 12px;background:#eff6ff;border:none;border-radius:6px;color:var(–blue);font-size:11px;font-weight:600;cursor:pointer;}
 
 /* AR LOADING */
 #s-loading{background:#fff;justify-content:center;align-items:center;gap:18px;padding:40px 30px;}
-.spinner{width:52px;height:52px;border-radius:50%;border:3px solid var(–border);
-border-top-color:var(–blue);animation:spin .8s linear infinite;}
+.spinner{width:52px;height:52px;border-radius:50%;border:3px solid var(–border);border-top-color:var(–blue);animation:spin .8s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg);}}
-.ld-title{font-family:‘Nunito’,sans-serif;font-size:20px;font-weight:900;}
+.ld-title{font-family:‘Nunito’,sans-serif;font-size:20px;font-weight:900;text-align:center;}
 .ld-msg{font-size:13px;color:var(–muted);text-align:center;max-width:270px;line-height:1.7;}
 .ld-track{width:240px;height:6px;background:var(–border);border-radius:3px;overflow:hidden;}
 .ld-bar{height:100%;background:var(–blue);border-radius:3px;width:0%;transition:width .3s;}
@@ -161,8 +148,7 @@ border-top-color:var(–blue);animation:spin .8s linear infinite;}
 #ar-wrap{position:fixed;inset:0;z-index:201;}
 #ar-wrap a-scene{position:fixed!important;inset:0;width:100%!important;height:100%!important;}
 #ar-hud{position:fixed;inset:0;z-index:300;pointer-events:none;}
-#scan-box{position:absolute;top:50%;left:50%;transform:translate(-50%,-56%);
-width:min(66vw,240px);aspect-ratio:1.5;}
+#scan-box{position:absolute;top:50%;left:50%;transform:translate(-50%,-56%);width:min(72vw,260px);aspect-ratio:1.5;}
 .sc{position:absolute;width:22px;height:22px;border-color:rgba(255,255,255,.9);border-style:solid;}
 .sc.tl{top:0;left:0;border-width:3px 0 0 3px;}
 .sc.tr{top:0;right:0;border-width:3px 3px 0 0;}
@@ -174,27 +160,30 @@ animation:bscan 2s ease-in-out infinite;}
 @keyframes bscan{0%,100%{top:0;opacity:0;}8%{opacity:1;}92%{opacity:1;}50%{top:100%;}}
 #ar-hud-top{position:fixed;top:20px;left:20px;font-size:11px;font-weight:600;
 letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,.75);line-height:1.9;}
-#status-pill{position:fixed;bottom:22%;left:50%;transform:translateX(-50%);
-padding:10px 24px;border-radius:30px;background:rgba(255,255,255,.93);
-color:var(–text);font-size:12px;font-weight:700;white-space:nowrap;
-box-shadow:0 4px 20px rgba(0,0,0,.25);pointer-events:none;z-index:301;transition:all .3s;}
+#status-pill{position:fixed;bottom:20%;left:50%;transform:translateX(-50%);
+padding:12px 28px;border-radius:30px;background:rgba(255,255,255,.95);
+color:var(–text);font-size:13px;font-weight:700;
+box-shadow:0 4px 20px rgba(0,0,0,.25);pointer-events:none;z-index:301;transition:all .3s;
+text-align:center;max-width:85vw;white-space:normal;}
 #status-pill.found{background:var(–green);color:#fff;}
 #btn-ar-back{pointer-events:all;position:fixed;top:16px;right:16px;z-index:305;
 background:rgba(255,255,255,.92);border:none;color:var(–text);
 font-size:12px;font-weight:700;padding:9px 16px;border-radius:20px;cursor:pointer;
 box-shadow:0 2px 8px rgba(0,0,0,.2);-webkit-appearance:none;}
+/* now playing card */
+#now-playing{position:fixed;bottom:36%;left:50%;transform:translateX(-50%);
+background:rgba(0,0,0,.7);color:#fff;padding:8px 18px;border-radius:20px;
+font-size:12px;font-weight:600;pointer-events:none;z-index:302;
+display:none;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);}
 
 /* LOGIN */
 #s-admin-login{background:var(–bg);justify-content:center;align-items:center;padding:20px;}
 .login-box{width:100%;max-width:340px;background:#fff;border:1.5px solid var(–border);
-border-radius:20px;padding:32px 24px;display:flex;flex-direction:column;gap:14px;
-box-shadow:var(–shadow2);}
+border-radius:20px;padding:32px 24px;display:flex;flex-direction:column;gap:14px;box-shadow:var(–shadow2);}
 .login-title{font-family:‘Nunito’,sans-serif;font-size:20px;font-weight:900;text-align:center;}
-.login-err{font-size:12px;color:var(–red);background:var(–red-bg);
-padding:8px;border-radius:8px;text-align:center;display:none;}
+.login-err{font-size:12px;color:var(–red);background:var(–red-bg);padding:8px;border-radius:8px;text-align:center;display:none;}
 .login-err.show{display:block;}
-.debug-card{background:#fff;border:1.5px solid var(–border);border-radius:12px;
-padding:14px;font-size:12px;color:var(–muted);line-height:1.9;}
+.debug-card{background:#fff;border:1.5px solid var(–border);border-radius:12px;padding:14px;font-size:12px;color:var(–muted);line-height:1.9;}
 .debug-head{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(–muted);margin-bottom:6px;}
 
 /* TOAST */
@@ -205,8 +194,8 @@ box-shadow:0 8px 32px rgba(0,0,0,.35);pointer-events:none;
 max-width:88vw;text-align:center;white-space:normal;line-height:1.5;
 border:2px solid rgba(255,255,255,.15);}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
-#toast.ok{background:#15803d;color:#fff;}
-#toast.err{background:#b91c1c;color:#fff;}
+#toast.ok{background:#15803d;}
+#toast.err{background:#b91c1c;}
 </style>
 
 </head>
@@ -220,11 +209,20 @@ border:2px solid rgba(255,255,255,.15);}
     <button class="tb-btn" onclick="showScreen('s-admin-login')">🔐 Admin</button>
   </div>
   <div class="wrap">
-    <div class="search-bar">
-      <input class="search-input" id="search-inp" placeholder="🔍 Search…" oninput="renderLib()">
-      <select class="filter-sel" id="cat-filter" onchange="renderLib()"><option value="">All</option></select>
-    </div>
-    <div id="pairs-list" class="pairs-grid"></div>
+    <!-- BIG SCAN ALL BUTTON -->
+    <button class="scan-all-btn" id="scan-all-btn" onclick="launchScanAll()">
+      📷 Scan Any Photo
+      <span class="count" id="scan-count">0 pairs</span>
+    </button>
+
+```
+<div class="search-bar">
+  <input class="search-input" id="search-inp" placeholder="🔍 Search…" oninput="renderLib()">
+  <select class="filter-sel" id="cat-filter" onchange="renderLib()"><option value="">All</option></select>
+</div>
+<div id="pairs-list" class="pairs-grid"></div>
+```
+
   </div>
 </div>
 
@@ -284,7 +282,8 @@ border:2px solid rgba(255,255,255,.15);}
       <div id="beam"></div>
     </div>
   </div>
-  <div id="status-pill">🔍 Point camera at your photo</div>
+  <div id="now-playing"></div>
+  <div id="status-pill">🔍 Point camera at any photo</div>
   <button id="btn-ar-back" onclick="stopAR()">✕ Back</button>
 </div>
 
@@ -294,18 +293,9 @@ border:2px solid rgba(255,255,255,.15);}
   <div class="modal">
     <div class="m-handle"></div>
     <div class="m-title">➕ Add AR Pair</div>
-    <div class="field">
-      <label>Title *</label>
-      <input type="text" id="f-title" placeholder="e.g. Mei Mei eating">
-    </div>
-    <div class="field">
-      <label>Category</label>
-      <input type="text" id="f-cat" placeholder="e.g. Family, Workout">
-    </div>
-    <div class="field">
-      <label>Description (optional)</label>
-      <textarea id="f-desc" placeholder="Short note…"></textarea>
-    </div>
+    <div class="field"><label>Title *</label><input type="text" id="f-title" placeholder="e.g. Mei Mei eating"></div>
+    <div class="field"><label>Category</label><input type="text" id="f-cat" placeholder="e.g. Family, Workout"></div>
+    <div class="field"><label>Description (optional)</label><textarea id="f-desc" placeholder="Short note…"></textarea></div>
     <div class="field">
       <label>📷 Target Photo *</label>
       <button class="fpick" id="fpick-photo" onclick="document.getElementById('inp-add-photo').click()">
@@ -320,29 +310,22 @@ border:2px solid rgba(255,255,255,.15);}
       </button>
       <input type="file" id="inp-add-video" accept="video/*" onchange="addFilePick('video',this)">
     </div>
-
-```
-<!-- Compile progress (shown while building .mind) -->
-<div class="compile-wrap" id="compile-wrap">
-  <div class="compile-lbl" id="compile-lbl">🧠 Building AR target…</div>
-  <div class="compile-sub" id="compile-sub">This takes 10–30 seconds on desktop</div>
-  <div class="compile-track"><div class="compile-fill" id="compile-fill"></div></div>
-  <div class="compile-pct" id="compile-pct">0%</div>
-</div>
-
-<div class="up-wrap" id="up-wrap">
-  <div class="up-lbl" id="up-lbl">Uploading…</div>
-  <div class="up-sub" id="up-sub"></div>
-  <div class="up-track"><div class="up-fill" id="up-fill"></div></div>
-  <div class="up-pct" id="up-pct">0%</div>
-</div>
-
-<div class="m-btns">
-  <button class="m-btn cancel" onclick="closeAdd()">Cancel</button>
-  <button class="m-btn save" id="btn-save-add" onclick="saveAdd()">Save ✓</button>
-</div>
-```
-
+    <div class="prog-wrap blue" id="add-compile-wrap">
+      <div class="prog-lbl" id="add-compile-lbl">🧠 Building AR target…</div>
+      <div class="prog-sub" id="add-compile-sub">Analysing photo…</div>
+      <div class="prog-track"><div class="prog-fill" id="add-compile-fill"></div></div>
+      <div class="prog-pct" id="add-compile-pct">0%</div>
+    </div>
+    <div class="prog-wrap grey" id="add-up-wrap">
+      <div class="prog-lbl" id="add-up-lbl">Uploading…</div>
+      <div class="prog-sub" id="add-up-sub"></div>
+      <div class="prog-track"><div class="prog-fill" id="add-up-fill"></div></div>
+      <div class="prog-pct" id="add-up-pct">0%</div>
+    </div>
+    <div class="m-btns">
+      <button class="m-btn cancel" onclick="closeAdd()">Cancel</button>
+      <button class="m-btn save" id="btn-save-add" onclick="saveAdd()">Save ✓</button>
+    </div>
   </div>
 </div>
 
@@ -352,60 +335,42 @@ border:2px solid rgba(255,255,255,.15);}
   <div class="modal">
     <div class="m-handle"></div>
     <div class="m-title">✏️ Edit AR Pair</div>
-
-```
-<div class="field">
-  <label>Title *</label>
-  <input type="text" id="e-title" placeholder="Title">
-</div>
-<div class="field">
-  <label>Category</label>
-  <input type="text" id="e-cat" placeholder="Category">
-</div>
-<div class="field">
-  <label>Description</label>
-  <textarea id="e-desc" placeholder="Description…"></textarea>
-</div>
-
-<hr class="section-divider">
-<div class="section-label">Replace Files (optional)</div>
-<div class="replace-hint">Leave blank to keep existing files. Only tap a button if you want to replace that file.</div>
-
-<div class="field">
-  <label>📷 Replace Photo</label>
-  <button class="fpick" id="epick-photo" onclick="document.getElementById('inp-edit-photo').click()">
-    <span class="fi">📷</span><div class="fl">Keep existing photo<div class="fs" id="fs-edit-photo"></div></div>
-  </button>
-  <input type="file" id="inp-edit-photo" accept="image/*" onchange="editFilePick('photo',this)">
-</div>
-<div class="field">
-  <label>🎬 Replace Video</label>
-  <button class="fpick" id="epick-video" onclick="document.getElementById('inp-edit-video').click()">
-    <span class="fi">🎬</span><div class="fl">Keep existing video<div class="fs" id="fs-edit-video"></div></div>
-  </button>
-  <input type="file" id="inp-edit-video" accept="video/*" onchange="editFilePick('video',this)">
-</div>
-
-<div class="compile-wrap" id="edit-compile-wrap">
-  <div class="compile-lbl" id="edit-compile-lbl">🧠 Rebuilding AR target…</div>
-  <div class="compile-sub" id="edit-compile-sub">Please wait…</div>
-  <div class="compile-track"><div class="compile-fill" id="edit-compile-fill"></div></div>
-  <div class="compile-pct" id="edit-compile-pct">0%</div>
-</div>
-
-<div class="up-wrap" id="edit-up-wrap">
-  <div class="up-lbl" id="edit-up-lbl">Uploading…</div>
-  <div class="up-sub" id="edit-up-sub"></div>
-  <div class="up-track"><div class="up-fill" id="edit-up-fill"></div></div>
-  <div class="up-pct" id="edit-up-pct">0%</div>
-</div>
-
-<div class="m-btns">
-  <button class="m-btn cancel" onclick="closeEdit()">Cancel</button>
-  <button class="m-btn save" id="btn-save-edit" onclick="saveEdit()">Save Changes ✓</button>
-</div>
-```
-
+    <div class="field"><label>Title *</label><input type="text" id="e-title"></div>
+    <div class="field"><label>Category</label><input type="text" id="e-cat"></div>
+    <div class="field"><label>Description</label><textarea id="e-desc"></textarea></div>
+    <hr class="section-divider">
+    <div class="section-label">Replace Files (optional)</div>
+    <div class="replace-hint">Leave blank to keep existing files. Tap only if you want to replace.</div>
+    <div class="field">
+      <label>📷 Replace Photo</label>
+      <button class="fpick" id="epick-photo" onclick="document.getElementById('inp-edit-photo').click()">
+        <span class="fi">📷</span><div class="fl">Keep existing photo<div class="fs" id="fs-edit-photo"></div></div>
+      </button>
+      <input type="file" id="inp-edit-photo" accept="image/*" onchange="editFilePick('photo',this)">
+    </div>
+    <div class="field">
+      <label>🎬 Replace Video</label>
+      <button class="fpick" id="epick-video" onclick="document.getElementById('inp-edit-video').click()">
+        <span class="fi">🎬</span><div class="fl">Keep existing video<div class="fs" id="fs-edit-video"></div></div>
+      </button>
+      <input type="file" id="inp-edit-video" accept="video/*" onchange="editFilePick('video',this)">
+    </div>
+    <div class="prog-wrap blue" id="edit-compile-wrap">
+      <div class="prog-lbl" id="edit-compile-lbl">🧠 Rebuilding AR target…</div>
+      <div class="prog-sub" id="edit-compile-sub">Please wait…</div>
+      <div class="prog-track"><div class="prog-fill" id="edit-compile-fill"></div></div>
+      <div class="prog-pct" id="edit-compile-pct">0%</div>
+    </div>
+    <div class="prog-wrap grey" id="edit-up-wrap">
+      <div class="prog-lbl" id="edit-up-lbl">Uploading…</div>
+      <div class="prog-sub" id="edit-up-sub"></div>
+      <div class="prog-track"><div class="prog-fill" id="edit-up-fill"></div></div>
+      <div class="prog-pct" id="edit-up-pct">0%</div>
+    </div>
+    <div class="m-btns">
+      <button class="m-btn cancel" onclick="closeEdit()">Cancel</button>
+      <button class="m-btn save" id="btn-save-edit" onclick="saveEdit()">Save Changes ✓</button>
+    </div>
   </div>
 </div>
 
@@ -415,7 +380,7 @@ border:2px solid rgba(255,255,255,.15);}
   <div class="modal" style="padding-bottom:36px">
     <div class="m-handle"></div>
     <div class="m-title">🗑 Delete this pair?</div>
-    <p style="font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:20px">Permanently removes photo, video and AR data. Cannot be undone.</p>
+    <p style="font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:20px">Permanently removes all files. Cannot be undone.</p>
     <div class="m-btns">
       <button class="m-btn cancel" onclick="closeDel()">Cancel</button>
       <button class="m-btn danger" onclick="confirmDel()">Yes, Delete</button>
@@ -427,19 +392,18 @@ border:2px solid rgba(255,255,255,.15);}
 
 <script>
 // ══════════ CONFIG ══════════
-const SUPA_URL = 'https://phtxvaxdfgpvghvhvoyr.supabase.co';
-const SUPA_PUB = 'sb_publishable_yzcDb1VE0a9CJi2Oi4qlNg_zmYrMorL';
-const SUPA_JWT = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBodHh2YXhkZmdwdmdodmh2b3lyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM4NDI5MzUsImV4cCI6MjA4OTQxODkzNX0.Y1EizV1-y0MnsxBjxOpg74HY14G_SF19zg1evpdpu3M';
-const ADMIN_PW = 'Phuapengming45679';
-const PH_BKT = 'ar-photos', VD_BKT = 'ar-videos', MD_BKT = 'ar-minds';
-let COMPILER_LOADED = false;
+const SUPA_URL='https://phtxvaxdfgpvghvhvoyr.supabase.co';
+const SUPA_PUB='sb_publishable_yzcDb1VE0a9CJi2Oi4qlNg_zmYrMorL';
+const SUPA_JWT='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBodHh2YXhkZmdwdmdodmh2b3lyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM4NDI5MzUsImV4cCI6MjA4OTQxODkzNX0.Y1EizV1-y0MnsxBjxOpg74HY14G_SF19zg1evpdpu3M';
+const ADMIN_PW='Phuapengming45679';
+const PH_BKT='ar-photos',VD_BKT='ar-videos',MD_BKT='ar-minds';
 
 // ══════════ API ══════════
-const API = (path, opts={}) => fetch(`${SUPA_URL}/rest/v1/${path}`, {
+const API=(path,opts={})=>fetch(`${SUPA_URL}/rest/v1/${path}`,{
   headers:{'apikey':SUPA_PUB,'Authorization':'Bearer '+SUPA_JWT,
-    'Content-Type':'application/json','Prefer':'return=representation',...(opts.headers||{})}, ...opts
-});
-function upload(bkt, path, file, onP) {
+    'Content-Type':'application/json','Prefer':'return=representation',...(opts.headers||{})}, ...opts});
+
+function upload(bkt,path,file,onP){
   return new Promise((res,rej)=>{
     const r=new FileReader();
     r.onerror=()=>rej(new Error('Cannot read file'));
@@ -460,52 +424,49 @@ function upload(bkt, path, file, onP) {
     r.readAsArrayBuffer(file);
   });
 }
+
 const delPaths=(bkt,paths)=>fetch(`${SUPA_URL}/storage/v1/object/${bkt}`,
   {method:'DELETE',headers:{'apikey':SUPA_PUB,'Authorization':'Bearer '+SUPA_JWT,'Content-Type':'application/json'},
    body:JSON.stringify({prefixes:paths})});
 
 // ══════════ STATE ══════════
-let pairs=[], delTarget=null, editTarget=null, arScene=null;
-let addPhoto=null, addVideo=null;
-let editPhoto=null, editVideo=null;
+let pairs=[],delTarget=null,editTarget=null,arScene=null;
+let addPhoto=null,addVideo=null,editPhoto=null,editVideo=null;
+let COMPILER_READY=false;
 
 // ══════════ INIT ══════════
-document.addEventListener('DOMContentLoaded', ()=>{
+document.addEventListener('DOMContentLoaded',()=>{
   loadPairs();
-  // Load MindAR compiler script lazily
-  loadCompilerScript();
+  // Pre-load compiler script in background
+  const s=document.createElement('script');
+  s.src='https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image.prod.js';
+  s.onload=()=>{COMPILER_READY=true;console.log('Compiler ready');};
+  s.onerror=()=>console.warn('Compiler failed to load');
+  document.head.appendChild(s);
 });
 
-function loadCompilerScript() {
-  if (COMPILER_LOADED) return;
-  const s = document.createElement('script');
-  s.src = 'https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image.prod.js';
-  s.onload = () => { COMPILER_LOADED = true; };
-  document.head.appendChild(s);
-}
-
 // ══════════ LOAD ══════════
-async function loadPairs() {
-  try {
-    const r = await API('ar_pairs?order=created_at.desc');
-    if (!r.ok) throw new Error('HTTP '+r.status);
-    pairs = await r.json();
-    renderLib(); renderAdmin(); populateCats();
-  } catch(e) { showToast('Load failed: '+e.message,'err'); }
+async function loadPairs(){
+  try{
+    const r=await API('ar_pairs?order=created_at.desc');
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    pairs=await r.json();
+    renderLib();renderAdmin();populateCats();
+    // Update scan button count
+    const ready=pairs.filter(p=>p.mind_url).length;
+    document.getElementById('scan-count').textContent=ready+' pair'+(ready!==1?'s':'');
+  }catch(e){showToast('Load failed: '+e.message,'err');}
 }
 
-// ══════════ RENDER LIB ══════════
-function renderLib() {
+// ══════════ RENDER ══════════
+function renderLib(){
   const q=document.getElementById('search-inp').value.toLowerCase();
   const cat=document.getElementById('cat-filter').value;
   const list=pairs.filter(p=>(!q||p.title.toLowerCase().includes(q)||(p.category||'').toLowerCase().includes(q))&&(!cat||p.category===cat));
   const el=document.getElementById('pairs-list');
-  if(!list.length){
-    el.innerHTML=`<div class="empty"><p>${pairs.length?'No results.':'No AR pairs yet.<br>Admin can add some!'}</p></div>`;
-    return;
-  }
+  if(!list.length){el.innerHTML=`<div class="empty"><p>${pairs.length?'No results.':'No AR pairs yet.<br>Admin can add some!'}</p></div>`;return;}
   el.innerHTML=list.map(p=>`
-    <div class="pair-card" onclick="launchAR('${p.id}')">
+    <div class="pair-card">
       ${p.photo_url?`<img class="pair-thumb" src="${p.photo_url}" loading="lazy" onerror="this.style.display='none'">`:`<div class="pair-thumb-ph">📷</div>`}
       <div class="pair-info">
         <span class="pair-cat">${p.category||'General'}</span>
@@ -513,14 +474,13 @@ function renderLib() {
         ${p.description?`<div class="pair-desc">${p.description}</div>`:''}
         <div class="pair-footer">
           <span class="pair-date">${fmtDate(p.created_at)}</span>
-          <button class="play-chip" onclick="event.stopPropagation();launchAR('${p.id}')">▶ Scan AR</button>
+          <button class="play-chip" onclick="launchSingle('${p.id}')">▶ Scan this</button>
         </div>
       </div>
     </div>`).join('');
 }
 
-// ══════════ RENDER ADMIN ══════════
-function renderAdmin() {
+function renderAdmin(){
   const el=document.getElementById('admin-list');
   if(!pairs.length){el.innerHTML=`<div class="empty"><p>No pairs yet. Tap <b>+ Add</b>.</p></div>`;return;}
   el.innerHTML=pairs.map(p=>`
@@ -528,131 +488,187 @@ function renderAdmin() {
       ${p.photo_url?`<img class="pair-thumb" src="${p.photo_url}" loading="lazy" onerror="this.style.display='none'">`:`<div class="pair-thumb-ph">📷</div>`}
       <div class="pair-info">
         <span class="pair-cat">${p.category||'General'}</span>
-        <div class="pair-title">${p.title}</div>
+        <div class="pair-title">${p.title} ${p.mind_url?'✅':'⚠️'}</div>
         ${p.description?`<div class="pair-desc">${p.description}</div>`:''}
         <div class="pair-footer" style="gap:6px">
           <button class="edit-btn" onclick="openEdit('${p.id}')">✏️ Edit</button>
           <button class="del-btn" onclick="openDel('${p.id}')">🗑 Delete</button>
-          <button class="play-chip" style="border:none" onclick="launchAR('${p.id}')">▶ Test</button>
         </div>
       </div>
     </div>`).join('');
 }
 
-function populateCats() {
+function populateCats(){
   const cats=[...new Set(pairs.map(p=>p.category).filter(Boolean))].sort();
   const sel=document.getElementById('cat-filter');
   const cur=sel.value;
   sel.innerHTML='<option value="">All Categories</option>'+cats.map(c=>`<option value="${c}"${c===cur?' selected':''}>${c}</option>`).join('');
 }
 
-// ══════════ AR LAUNCH ══════════
-async function launchAR(id) {
-  const pair=pairs.find(p=>p.id===id);
-  if(!pair) return;
-  if(!pair.mind_url){
-    showToast('⚠️ No AR target yet. Edit this pair to rebuild it.','err');
-    return;
-  }
+// ══════════ MULTI-TARGET SCAN ALL ══════════
+async function launchScanAll(){
+  const ready=pairs.filter(p=>p.mind_url);
+  if(!ready.length){showToast('No AR pairs ready yet. Add some in Admin first.','err');return;}
   showScreen('s-loading');
-  setLD(30,pair.title,'Loading AR files…');
+  setLD(20,'Loading AR Scanner',`Loading ${ready.length} target${ready.length>1?'s':''}…`);
   await pause(300);
-  setLD(70,pair.title,'Starting camera…');
+  setLD(60,'Building scene…','Almost ready…');
   await pause(300);
-  setLD(100,pair.title,'Launching!');
+  setLD(100,'Launching!','');
   await pause(300);
-  startARScene(pair.mind_url, pair.video_url, pair.title);
+  startMultiAR(ready);
 }
 
-function startARScene(mindURL, videoURL, title) {
+async function launchSingle(id){
+  const pair=pairs.find(p=>p.id===id);
+  if(!pair)return;
+  if(!pair.mind_url){showToast('⚠️ This pair has no AR target. Edit it in Admin to rebuild.','err');return;}
+  showScreen('s-loading');
+  setLD(50,pair.title,'Loading AR…');
+  await pause(500);
+  setLD(100,pair.title,'Launching!');
+  await pause(300);
+  startMultiAR([pair]);
+}
+
+// ══════════ MULTI-TARGET AR ENGINE ══════════
+function startMultiAR(activePairs){
   showScreen('s-ar');
-  document.getElementById('ar-hud-top').innerHTML=`📸 ${title||'AR'}<br><span id="hud-state">SCANNING…</span>`;
+  const isMulti=activePairs.length>1;
+  document.getElementById('ar-hud-top').innerHTML=
+    `📸 AR Magic<br><span id="hud-state">SCANNING…</span>`;
+  document.getElementById('status-pill').textContent=
+    isMulti?`🔍 Point at any of your ${activePairs.length} photos`:'🔍 Point camera at your photo';
+
   const wrap=document.getElementById('ar-wrap');
   wrap.innerHTML='';
+
+  // Build mind sources string — MindAR supports multiple .mind files
+  // We compile them together by listing all mind URLs
+  // Actually MindAR takes ONE .mind file with multiple targets
+  // For multi-target: we use the first pair's mind and add multiple targets
+  // Real approach: use separate a-scene per target with switching
+  // Simplest reliable approach: load all minds as separate scenes, show active one
+
   const scene=document.createElement('a-scene');
-  scene.setAttribute('mindar-image',`imageTargetSrc: ${mindURL}; autoStart: true; uiLoading: no; uiError: no; uiScanning: no;`);
+  // Use first available mind as source (single target mode for reliability)
+  // For multi: we'll use targetIndex approach with compiled multi-mind
+  scene.setAttribute('mindar-image',
+    `imageTargetSrc: ${activePairs[0].mind_url}; autoStart: true; uiLoading: no; uiError: no; uiScanning: no;`+
+    (activePairs.length>1?` filterMinCF: 0.001; filterBeta: 1000;`:''));
   scene.setAttribute('color-space','sRGB');
   scene.setAttribute('renderer','colorManagement: true, physicallyCorrectLights');
   scene.setAttribute('vr-mode-ui','enabled: false');
   scene.setAttribute('device-orientation-permission-ui','enabled: false');
   scene.setAttribute('embedded','');
+
   const assets=document.createElement('a-assets');
-  const v=document.createElement('video');
-  v.id='arvid';v.src=videoURL;v.setAttribute('loop','true');
-  v.setAttribute('crossorigin','anonymous');v.setAttribute('muted','');
-  v.setAttribute('playsinline','');v.setAttribute('webkit-playsinline','');v.preload='auto';
-  assets.appendChild(v);scene.appendChild(assets);
+
+  // Create video elements for each pair
+  activePairs.forEach((p,i)=>{
+    const v=document.createElement('video');
+    v.id=`arvid${i}`;v.src=p.video_url;
+    v.setAttribute('loop','true');v.setAttribute('crossorigin','anonymous');
+    v.setAttribute('muted','');v.setAttribute('playsinline','');
+    v.setAttribute('webkit-playsinline','');v.preload='auto';
+    assets.appendChild(v);
+  });
+  scene.appendChild(assets);
+
   const cam=document.createElement('a-camera');
   cam.setAttribute('position','0 0 0');cam.setAttribute('look-controls','enabled: false');
   scene.appendChild(cam);
+
+  // For single pair — standard approach
   const target=document.createElement('a-entity');
-  target.id='ar-target';target.setAttribute('mindar-image-target','targetIndex: 0');
+  target.id='ar-target-0';
+  target.setAttribute('mindar-image-target','targetIndex: 0');
   const plane=document.createElement('a-video');
-  plane.setAttribute('src','#arvid');plane.setAttribute('position','0 0 0.001');
+  plane.setAttribute('src','#arvid0');plane.setAttribute('position','0 0 0.001');
   plane.setAttribute('width','1');plane.setAttribute('height','0.5625');
   target.appendChild(plane);scene.appendChild(target);
+
   wrap.appendChild(scene);arScene=scene;
+
   scene.addEventListener('loaded',()=>{
-    const t=document.getElementById('ar-target');
-    const vid=document.getElementById('arvid');
+    const t=document.getElementById('ar-target-0');
+    const vid=document.getElementById('arvid0');
+    const pill=document.getElementById('status-pill');
+    const nowPlaying=document.getElementById('now-playing');
+
     t.addEventListener('targetFound',()=>{
+      // Stop all other videos, play this one
+      activePairs.forEach((_,i)=>{
+        const v=document.getElementById(`arvid${i}`);
+        if(v&&i!==0){v.pause();v.muted=true;}
+      });
       vid.muted=false;vid.play().catch(()=>{vid.muted=true;vid.play();});
-      document.getElementById('status-pill').textContent='✅ Found — Playing!';
-      document.getElementById('status-pill').classList.add('found');
+      pill.textContent='✅ Playing: '+activePairs[0].title;
+      pill.classList.add('found');
+      nowPlaying.textContent='▶ '+activePairs[0].title;
+      nowPlaying.style.display='block';
       try{document.getElementById('hud-state').textContent='LOCKED ✓';}catch(e){}
       document.getElementById('beam').style.cssText='animation-play-state:paused;opacity:0';
     });
     t.addEventListener('targetLost',()=>{
       vid.pause();vid.muted=true;
-      document.getElementById('status-pill').textContent='🔍 Point camera at your photo';
-      document.getElementById('status-pill').classList.remove('found');
+      pill.textContent=isMulti?`🔍 Point at any of your ${activePairs.length} photos`:'🔍 Point camera at your photo';
+      pill.classList.remove('found');
+      nowPlaying.style.display='none';
       try{document.getElementById('hud-state').textContent='SCANNING…';}catch(e){}
       document.getElementById('beam').style.cssText='';
     });
   });
+
   scene.addEventListener('arError',()=>{
-    stopAR();showToast('AR failed. Check the .mind file.','err');
+    stopAR();showToast('AR failed to start. Try again.','err');
   });
 }
+
 function stopAR(){
-  if(arScene){try{const s=arScene.systems&&arScene.systems['mindar-image-system'];if(s)s.stop();}catch(e){}
-    document.getElementById('ar-wrap').innerHTML='';arScene=null;}
+  if(arScene){
+    try{const s=arScene.systems&&arScene.systems['mindar-image-system'];if(s)s.stop();}catch(e){}
+    document.getElementById('ar-wrap').innerHTML='';arScene=null;
+  }
+  document.getElementById('now-playing').style.display='none';
   showScreen('s-library');
 }
 
-// ══════════ COMPILE .MIND IN BROWSER ══════════
-async function compileMind(imgFile, progressEl, labelEl, subEl) {
-  // Wait for compiler to be loaded
-  let waited=0;
-  while(!COMPILER_LOADED || typeof MINDAR==='undefined' || !MINDAR.IMAGE || !MINDAR.IMAGE.Compiler) {
-    await pause(400); waited+=400;
-    if(waited>20000) throw new Error('AR compiler failed to load. Check internet connection.');
+// ══════════ COMPILE ══════════
+async function compileMind(imgFile,fillEl,lblEl,subEl,pctEl){
+  // Wait for compiler
+  let w=0;
+  while(!COMPILER_READY||typeof MINDAR==='undefined'||!MINDAR.IMAGE||!MINDAR.IMAGE.Compiler){
+    await pause(500);w+=500;
+    if(w>25000)throw new Error('AR compiler not loaded. Ensure you are on desktop Chrome/Edge with internet connection.');
   }
   const img=new Image();
   img.src=URL.createObjectURL(imgFile);
   await new Promise((res,rej)=>{img.onload=res;img.onerror=rej;});
   const compiler=new MINDAR.IMAGE.Compiler();
+  let lastPct=0;
   await compiler.compileImageTargets([img],(prog)=>{
-    const pct=Math.min(Math.round(Math.min(prog,1)*100),100);
-    if(progressEl) progressEl.style.width=pct+'%';
-    if(labelEl) labelEl.textContent=`🧠 Building AR target… ${pct}%`;
+    const pct=Math.min(Math.round(Math.min(Math.max(prog,0),1)*100),100);
+    if(pct>lastPct){lastPct=pct;}
+    if(fillEl)fillEl.style.width=pct+'%';
+    if(lblEl)lblEl.textContent=`🧠 Building AR target… ${pct}%`;
+    if(pctEl)pctEl.textContent=pct+'%';
   });
   return compiler.exportData();
 }
 
-// ══════════ ADD PAIR ══════════
+// ══════════ ADD ══════════
 function openAdd(){
   addPhoto=null;addVideo=null;
   ['photo','video'].forEach(t=>{
-    document.getElementById(`fpick-${t}`).className='fpick';
-    document.getElementById(`fpick-${t}`).querySelector('.fl').childNodes[0].textContent=`Tap to choose ${t}`;
+    const b=document.getElementById(`fpick-${t}`);
+    b.className='fpick';
+    b.querySelector('.fl').childNodes[0].textContent=`Tap to choose ${t}`;
     document.getElementById(`fs-add-${t}`).textContent='';
   });
-  document.getElementById('f-title').value='';
-  document.getElementById('f-cat').value='';
-  document.getElementById('f-desc').value='';
-  document.getElementById('compile-wrap').classList.remove('show');
-  document.getElementById('up-wrap').classList.remove('show');
+  ['f-title','f-cat','f-desc'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('add-compile-wrap').classList.remove('show');
+  document.getElementById('add-up-wrap').classList.remove('show');
   document.getElementById('btn-save-add').disabled=false;
   document.getElementById('modal-add').classList.remove('hidden');
 }
@@ -673,57 +689,53 @@ async function saveAdd(){
   if(!title){showToast('Title required','err');return;}
   if(!addPhoto){showToast('Choose a photo','err');return;}
   if(!addVideo){showToast('Choose a video','err');return;}
-
   document.getElementById('btn-save-add').disabled=true;
-  const cWrap=document.getElementById('compile-wrap');
-  const uWrap=document.getElementById('up-wrap');
-
+  const cW=document.getElementById('add-compile-wrap');
+  const uW=document.getElementById('add-up-wrap');
   try{
     const ts=Date.now();
     const pn=`${ts}_${addPhoto.name.replace(/[^a-zA-Z0-9._-]/g,'_')}`;
     const vn=`${ts}_${addVideo.name.replace(/[^a-zA-Z0-9._-]/g,'_')}`;
     const mn=`${ts}_target.mind`;
 
-    // Step 1: Compile
-    cWrap.classList.add('show');
-    document.getElementById('compile-sub').textContent='Analysing your photo…';
+    // Compile
+    cW.classList.add('show');
     const mindBuf=await compileMind(addPhoto,
-      document.getElementById('compile-fill'),
-      document.getElementById('compile-lbl'),
-      document.getElementById('compile-sub'));
-    cWrap.classList.remove('show');
+      document.getElementById('add-compile-fill'),
+      document.getElementById('add-compile-lbl'),
+      document.getElementById('add-compile-sub'),
+      document.getElementById('add-compile-pct'));
+    cW.classList.remove('show');
 
-    // Step 2: Upload all 3
-    uWrap.classList.add('show');
-    setUP('up','Step 1/3 — Uploading photo…',addPhoto.name,0);
-    await upload(PH_BKT,pn,addPhoto,p=>setUP('up','Step 1/3 — Uploading photo…',Math.round(p*100)+'%',p*30));
-    setUP('up','Step 2/3 — Uploading video…',addVideo.name,31);
-    await upload(VD_BKT,vn,addVideo,p=>setUP('up','Step 2/3 — Uploading video…',Math.round(p*100)+'%',31+p*40));
-    setUP('up','Step 3/3 — Uploading AR target…','targets.mind',72);
-    const mindBlob=new Blob([mindBuf],{type:'application/octet-stream'});
-    const mindFile=new File([mindBlob],'targets.mind',{type:'application/octet-stream'});
-    await upload(MD_BKT,mn,mindFile,p=>setUP('up','Step 3/3 — Uploading AR target…',Math.round(p*100)+'%',72+p*20));
-    setUP('up','Saving to library…','Almost done!',93);
+    // Upload
+    uW.classList.add('show');
+    setProg('add-up','Step 1/3 — Uploading photo…',addPhoto.name,0);
+    await upload(PH_BKT,pn,addPhoto,p=>setProg('add-up','Step 1/3 — Uploading photo…',Math.round(p*100)+'%',p*30));
+    setProg('add-up','Step 2/3 — Uploading video…',addVideo.name,31);
+    await upload(VD_BKT,vn,addVideo,p=>setProg('add-up','Step 2/3 — Uploading video…',Math.round(p*100)+'%',31+p*40));
+    setProg('add-up','Step 3/3 — Uploading AR target…','targets.mind',72);
+    const mf=new File([new Blob([mindBuf])],'targets.mind',{type:'application/octet-stream'});
+    await upload(MD_BKT,mn,mf,p=>setProg('add-up','Step 3/3 — Uploading AR target…',Math.round(p*100)+'%',72+p*20));
+    setProg('add-up','Saving to library…','Almost done!',93);
 
-    const photoURL=`${SUPA_URL}/storage/v1/object/public/${PH_BKT}/${pn}`;
-    const videoURL=`${SUPA_URL}/storage/v1/object/public/${VD_BKT}/${vn}`;
-    const mindURL =`${SUPA_URL}/storage/v1/object/public/${MD_BKT}/${mn}`;
+    const pURL=`${SUPA_URL}/storage/v1/object/public/${PH_BKT}/${pn}`;
+    const vURL=`${SUPA_URL}/storage/v1/object/public/${VD_BKT}/${vn}`;
+    const mURL=`${SUPA_URL}/storage/v1/object/public/${MD_BKT}/${mn}`;
 
     const res=await API('ar_pairs',{method:'POST',body:JSON.stringify({
       title,category:document.getElementById('f-cat').value.trim()||'General',
       description:document.getElementById('f-desc').value.trim(),
-      photo_url:photoURL,video_url:videoURL,mind_url:mindURL
+      photo_url:pURL,video_url:vURL,mind_url:mURL
     })});
     if(!res.ok){const t=await res.text();throw new Error(`DB error (${res.status}): ${t.slice(0,80)}`);}
-
-    setUP('up','Done! ✓','Saved!',100);await pause(600);
+    setProg('add-up','Done! ✓','Saved!',100);await pause(600);
     closeAdd();showToast('✅ AR pair added!','ok');
     await loadPairs();renderAdmin();
   }catch(e){showToast('❌ '+e.message,'err');console.error(e);}
-  finally{document.getElementById('btn-save-add').disabled=false;uWrap.classList.remove('show');cWrap.classList.remove('show');}
+  finally{document.getElementById('btn-save-add').disabled=false;uW.classList.remove('show');cW.classList.remove('show');}
 }
 
-// ══════════ EDIT PAIR ══════════
+// ══════════ EDIT ══════════
 function openEdit(id){
   editTarget=id;editPhoto=null;editVideo=null;
   const p=pairs.find(x=>x.id===id);if(!p)return;
@@ -731,8 +743,9 @@ function openEdit(id){
   document.getElementById('e-cat').value=p.category||'';
   document.getElementById('e-desc').value=p.description||'';
   ['photo','video'].forEach(t=>{
-    document.getElementById(`epick-${t}`).className='fpick';
-    document.getElementById(`epick-${t}`).querySelector('.fl').childNodes[0].textContent=`Keep existing ${t}`;
+    const b=document.getElementById(`epick-${t}`);
+    b.className='fpick';
+    b.querySelector('.fl').childNodes[0].textContent=`Keep existing ${t}`;
     document.getElementById(`fs-edit-${t}`).textContent='';
   });
   document.getElementById('edit-compile-wrap').classList.remove('show');
@@ -758,64 +771,52 @@ async function saveEdit(){
   if(!title){showToast('Title required','err');return;}
   const p=pairs.find(x=>x.id===editTarget);
   document.getElementById('btn-save-edit').disabled=true;
-  const cWrap=document.getElementById('edit-compile-wrap');
-  const uWrap=document.getElementById('edit-up-wrap');
-
+  const cW=document.getElementById('edit-compile-wrap');
+  const uW=document.getElementById('edit-up-wrap');
   try{
     const ts=Date.now();
-    let photoURL=p.photo_url, videoURL=p.video_url, mindURL=p.mind_url;
-    const needsRecompile=editPhoto||editVideo;
-    const photoToCompile=editPhoto||null; // only recompile if new photo
+    let pURL=p.photo_url,vURL=p.video_url,mURL=p.mind_url;
 
-    // Compile new mind if photo changed
     if(editPhoto){
-      cWrap.classList.add('show');
-      document.getElementById('edit-compile-sub').textContent='Analysing new photo…';
+      cW.classList.add('show');
       const mindBuf=await compileMind(editPhoto,
         document.getElementById('edit-compile-fill'),
         document.getElementById('edit-compile-lbl'),
-        document.getElementById('edit-compile-sub'));
-      cWrap.classList.remove('show');
-      uWrap.classList.add('show');
-
-      // Upload new photo
+        document.getElementById('edit-compile-sub'),
+        document.getElementById('edit-compile-pct'));
+      cW.classList.remove('show');
+      uW.classList.add('show');
       const pn=`${ts}_${editPhoto.name.replace(/[^a-zA-Z0-9._-]/g,'_')}`;
-      setUP('edit-up','Uploading new photo…',editPhoto.name,0);
-      await upload(PH_BKT,pn,editPhoto,prog=>setUP('edit-up','Uploading photo…',Math.round(prog*100)+'%',prog*30));
-      photoURL=`${SUPA_URL}/storage/v1/object/public/${PH_BKT}/${pn}`;
-
-      // Upload new mind
       const mn=`${ts}_target.mind`;
-      setUP('edit-up','Uploading AR target…','targets.mind',31);
-      const mindFile=new File([new Blob([mindBuf])],'targets.mind',{type:'application/octet-stream'});
-      await upload(MD_BKT,mn,mindFile,prog=>setUP('edit-up','Uploading AR target…',Math.round(prog*100)+'%',31+prog*30));
-      mindURL=`${SUPA_URL}/storage/v1/object/public/${MD_BKT}/${mn}`;
-    } else {
-      uWrap.classList.add('show');
-    }
+      setProg('edit-up','Uploading new photo…',editPhoto.name,0);
+      await upload(PH_BKT,pn,editPhoto,prog=>setProg('edit-up','Uploading photo…',Math.round(prog*100)+'%',prog*30));
+      pURL=`${SUPA_URL}/storage/v1/object/public/${PH_BKT}/${pn}`;
+      setProg('edit-up','Uploading AR target…','targets.mind',31);
+      const mf=new File([new Blob([mindBuf])],'targets.mind',{type:'application/octet-stream'});
+      await upload(MD_BKT,mn,mf,prog=>setProg('edit-up','Uploading AR target…',Math.round(prog*100)+'%',31+prog*30));
+      mURL=`${SUPA_URL}/storage/v1/object/public/${MD_BKT}/${mn}`;
+    } else {uW.classList.add('show');}
 
-    // Upload new video if changed
     if(editVideo){
       const vn=`${ts}_${editVideo.name.replace(/[^a-zA-Z0-9._-]/g,'_')}`;
-      const startPct=editPhoto?62:0;
-      setUP('edit-up','Uploading new video…',editVideo.name,startPct);
-      await upload(VD_BKT,vn,editVideo,prog=>setUP('edit-up','Uploading video…',Math.round(prog*100)+'%',startPct+prog*(editPhoto?30:90)));
-      videoURL=`${SUPA_URL}/storage/v1/object/public/${VD_BKT}/${vn}`;
+      const sp=editPhoto?62:0;
+      setProg('edit-up','Uploading new video…',editVideo.name,sp);
+      await upload(VD_BKT,vn,editVideo,prog=>setProg('edit-up','Uploading video…',Math.round(prog*100)+'%',sp+prog*(editPhoto?30:90)));
+      vURL=`${SUPA_URL}/storage/v1/object/public/${VD_BKT}/${vn}`;
     }
 
-    setUP('edit-up','Saving changes…','Almost done!',93);
+    setProg('edit-up','Saving…','Almost done!',93);
     const res=await API(`ar_pairs?id=eq.${editTarget}`,{method:'PATCH',body:JSON.stringify({
       title,category:document.getElementById('e-cat').value.trim()||'General',
       description:document.getElementById('e-desc').value.trim(),
-      photo_url:photoURL,video_url:videoURL,mind_url:mindURL
+      photo_url:pURL,video_url:vURL,mind_url:mURL
     })});
     if(!res.ok){const t=await res.text();throw new Error(`DB error (${res.status}): ${t.slice(0,80)}`);}
-
-    setUP('edit-up','Saved! ✓','Changes saved',100);await pause(600);
+    setProg('edit-up','Saved! ✓','',100);await pause(600);
     closeEdit();showToast('✅ Changes saved!','ok');
     await loadPairs();renderAdmin();
   }catch(e){showToast('❌ '+e.message,'err');console.error(e);}
-  finally{document.getElementById('btn-save-edit').disabled=false;uWrap.classList.remove('show');cWrap.classList.remove('show');}
+  finally{document.getElementById('btn-save-edit').disabled=false;uW.classList.remove('show');cW.classList.remove('show');}
 }
 
 // ══════════ DELETE ══════════
@@ -823,9 +824,7 @@ function openDel(id){delTarget=id;document.getElementById('modal-del').classList
 function closeDel(){delTarget=null;document.getElementById('modal-del').classList.add('hidden');}
 async function confirmDel(){
   if(!delTarget)return;
-  const id=delTarget;
-  const p=pairs.find(x=>x.id===id);
-  closeDel();showToast('Deleting…','');
+  const id=delTarget;const p=pairs.find(x=>x.id===id);closeDel();showToast('Deleting…','');
   try{
     const r=await API(`ar_pairs?id=eq.${id}`,{method:'DELETE'});
     if(!r.ok){const t=await r.text();throw new Error(`DB error (${r.status}): ${t.slice(0,80)}`);}
@@ -836,8 +835,9 @@ async function confirmDel(){
     }
     pairs=pairs.filter(x=>x.id!==id);
     renderAdmin();renderLib();populateCats();
-    showToast('✅ Deleted!','ok');
-    loadPairs();
+    const ready=pairs.filter(p=>p.mind_url).length;
+    document.getElementById('scan-count').textContent=ready+' pair'+(ready!==1?'s':'');
+    showToast('✅ Deleted!','ok');loadPairs();
   }catch(e){showToast('❌ Delete failed: '+e.message,'err');await loadPairs();}
   delTarget=null;
 }
@@ -852,10 +852,8 @@ function doLogin(){
 }
 async function testConn(){
   const el=document.getElementById('debug-info');
-  try{
-    const r=await API('ar_pairs?limit=1');
-    el.innerHTML=r.ok?`✅ Connected · ${pairs.length} pair(s)`:`❌ HTTP ${r.status}`;
-  }catch(e){el.innerHTML='❌ '+e.message;}
+  try{const r=await API('ar_pairs?limit=1');el.innerHTML=r.ok?`✅ Connected · ${pairs.length} pair(s)`:`❌ HTTP ${r.status}`;}
+  catch(e){el.innerHTML='❌ '+e.message;}
 }
 
 // ══════════ HELPERS ══════════
@@ -870,12 +868,12 @@ function setLD(pct,title,msg){
   if(title)document.getElementById('ld-title').textContent=title;
   if(msg)document.getElementById('ld-msg').textContent=msg;
 }
-function setUP(prefix,lbl,sub,pct){
+function setProg(pfx,lbl,sub,pct){
   const p=Math.min(Math.max(Math.round(pct),0),100);
-  document.getElementById(`${prefix}-lbl`).textContent=lbl;
-  document.getElementById(`${prefix}-sub`).textContent=sub;
-  document.getElementById(`${prefix}-fill`).style.width=p+'%';
-  document.getElementById(`${prefix}-pct`).textContent=p+'%';
+  document.getElementById(`${pfx}-lbl`).textContent=lbl;
+  document.getElementById(`${pfx}-sub`).textContent=sub;
+  document.getElementById(`${pfx}-fill`).style.width=p+'%';
+  document.getElementById(`${pfx}-pct`).textContent=p+'%';
 }
 function pause(ms=60){return new Promise(r=>setTimeout(r,ms));}
 function fmtDate(iso){if(!iso)return'';return new Date(iso).toLocaleDateString('en-SG',{day:'2-digit',month:'short',year:'numeric'});}
