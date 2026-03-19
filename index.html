@@ -575,18 +575,26 @@ async function launchAR_fromLib(id) {
     } catch(e) {
       setLoad(0,'Failed to load photo',pair.title); return;
     }
-    setLoad(25,'Compiling AR target…',pair.title);
+    setLoad(25,'Compiling AR target… (first time only)',pair.title);
     await pause(100);
+
+    // Compile with hard 60s timeout so it never hangs forever
     const compiler = new MINDAR.IMAGE.Compiler();
-    await compiler.compileImageTargets([img],(prog)=>{
-      setLoad(25+Math.round(prog*60),`Processing… ${Math.round(prog*100)}%`,pair.title);
+    const compilePromise = compiler.compileImageTargets([img],(prog)=>{
+      // prog is 0-1, map to 25-85%
+      const pct = 25 + Math.round(Math.min(prog, 1) * 60);
+      setLoad(pct, `Analysing photo… ${Math.round(Math.min(prog,1)*100)}%`, pair.title);
     });
-    setLoad(88,'Saving target…',pair.title);
+    const compileTimeout = new Promise((_,rej) => setTimeout(()=>rej(new Error('timeout')), 60000));
+    await Promise.race([compilePromise, compileTimeout]);
+
+    setLoad(88,'Saving AR target…',pair.title);
     const buf = compiler.exportData();
     mindURL = URL.createObjectURL(new Blob([buf]));
+    // Cache in background — don't await
     API(`ar_pairs?id=eq.${id}`,{method:'PATCH',body:JSON.stringify({mind_data:bufferToBase64(buf)})}).catch(()=>{});
-    setLoad(95,'Launching…',pair.title);
-    await pause(200);
+    setLoad(95,'Launching camera…',pair.title);
+    await pause(300);
   }
   setLoad(100,'Ready!',pair.title);
   await pause(300);
@@ -834,8 +842,9 @@ function showScreen(id){
   });
 }
 function setLoad(pct,msg,title){
-  document.getElementById('load-bar').style.width=pct+'%';
-  document.getElementById('load-pct').textContent=pct+'%';
+  const p = Math.min(Math.max(Math.round(pct), 0), 100); // clamp 0-100
+  document.getElementById('load-bar').style.width=p+'%';
+  document.getElementById('load-pct').textContent=p+'%';
   if(msg) document.getElementById('load-msg').textContent=msg;
   if(title) document.getElementById('load-title').textContent=title;
 }
