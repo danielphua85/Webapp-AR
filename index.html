@@ -7,8 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta http-equiv="Content-Security-Policy" content="default-src * 'self' 'unsafe-inline' 'unsafe-eval' data: blob:; connect-src *; img-src * data: blob:; media-src * blob:; script-src * 'unsafe-inline' 'unsafe-eval'; style-src * 'unsafe-inline';">
 <title>AR Magic Library</title>
-<script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+<!-- A-Frame loaded dynamically when AR launches to avoid WebGL conflict with compiler -->
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&family=Inter:wght@400;500;600&display=swap');
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
@@ -462,14 +461,38 @@ let addPhoto=null,addVideo=null,editPhoto=null,editVideo=null;
 let compilerScript=null,COMPILER_READY=false;
 
 // ══════ INIT ══════
+let AFRAME_READY = false;
+let aframeLoadCallbacks = [];
+
+function loadAFrame(callback) {
+  if(AFRAME_READY) { callback(); return; }
+  aframeLoadCallbacks.push(callback);
+  if(document.getElementById('aframe-script')) return; // already loading
+  
+  const s1 = document.createElement('script');
+  s1.id = 'aframe-script';
+  s1.src = 'https://aframe.io/releases/1.5.0/aframe.min.js';
+  s1.onload = () => {
+    const s2 = document.createElement('script');
+    s2.src = 'https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js';
+    s2.onload = () => {
+      AFRAME_READY = true;
+      aframeLoadCallbacks.forEach(cb => cb());
+      aframeLoadCallbacks = [];
+    };
+    document.head.appendChild(s2);
+  };
+  document.head.appendChild(s1);
+}
+
 document.addEventListener('DOMContentLoaded',()=>{
   loadPairs();
-  // Only load compiler on desktop
+  // Only load COMPILER on desktop (NOT A-Frame — that loads when AR launches)
   if(!isMobile){
-    compilerScript=document.createElement('script');
-    compilerScript.src='https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image.prod.js';
-    compilerScript.onload=()=>{COMPILER_READY=true;};
-    document.head.appendChild(compilerScript);
+    const cs = document.createElement('script');
+    cs.src = 'https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image.prod.js';
+    cs.onload = () => { COMPILER_READY = true; console.log('MindAR compiler ready'); };
+    document.head.appendChild(cs);
   }
 });
 
@@ -559,8 +582,10 @@ async function launchSingle(id){
   if(!pair)return;
   if(!pair.mind_url){showToast('⚠️ This pair has no AR target yet. Edit it from a laptop.','err');return;}
   showScreen('s-loading');
-  setLD(40,pair.title,'Loading AR…');await pause(400);
-  setLD(80,pair.title,'Starting camera…');await pause(300);
+  setLD(20,pair.title,'Loading AR engine…');
+  // Load A-Frame dynamically (separate from compiler to avoid WebGL conflict)
+  await new Promise(resolve => loadAFrame(resolve));
+  setLD(60,pair.title,'Starting camera…');await pause(300);
   setLD(100,pair.title,'Launching!');await pause(200);
   startARScene(pair.mind_url,pair.video_url,pair.title);
 }
