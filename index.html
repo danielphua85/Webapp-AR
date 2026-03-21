@@ -87,16 +87,15 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
   margin-top:40px;font-size:12px;color:var(--muted);text-align:center;line-height:1.7;
 }
 
-/* Small admin link at very bottom */
-.admin-link-wrap{
-  position:fixed;bottom:16px;width:100%;text-align:center;
+/* Invisible admin tap zone — top right corner */
+#admin-tap-zone{
+  position:fixed;top:0;right:0;
+  width:70px;height:70px;
+  z-index:500;
+  cursor:default;
+  -webkit-tap-highlight-color:transparent;
+  background:transparent;
 }
-.admin-link{
-  font-size:11px;color:rgba(255,255,255,.18);cursor:pointer;
-  background:none;border:none;font-family:inherit;
-  transition:color .2s;letter-spacing:1px;
-}
-.admin-link:hover{color:rgba(255,255,255,.45);}
 
 /* ════════════════════════════════
    ADMIN LOGIN MODAL
@@ -323,10 +322,8 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
   </p>
 </div>
 
-<!-- Tiny admin link — discreet, at bottom -->
-<div class="admin-link-wrap">
-  <button class="admin-link" onclick="showAdminLogin()">⚙ Admin</button>
-</div>
+<!-- Invisible admin tap zone — top right corner, completely hidden -->
+<div id="admin-tap-zone" onclick="handleAdminTap()"></div>
 
 <!-- ════════════════════════════════════════
      ADMIN LOGIN MODAL
@@ -649,17 +646,30 @@ function checkAdminLogin() {
 function enterAdminMode() {
   sessionStorage.setItem(SESSION_KEY, '1');
   document.getElementById('guest-screen').classList.add('hidden');
-  document.querySelector('.admin-link-wrap').classList.add('hidden');
+  document.getElementById('admin-tap-zone').classList.add('hidden');
   document.getElementById('admin-app').classList.remove('hidden');
   loadLibrary();
   toast('Welcome back, Admin 👋', 'success');
+}
+
+// ── Invisible tap counter — must tap top-right 3 times within 2 seconds ──
+let _tapCount = 0, _tapTimer = null;
+function handleAdminTap() {
+  _tapCount++;
+  clearTimeout(_tapTimer);
+  _tapTimer = setTimeout(() => { _tapCount = 0; }, 2000);
+  if (_tapCount >= 3) {
+    _tapCount = 0;
+    clearTimeout(_tapTimer);
+    showAdminLogin();
+  }
 }
 
 function adminLogout() {
   sessionStorage.removeItem(SESSION_KEY);
   document.getElementById('admin-app').classList.add('hidden');
   document.getElementById('guest-screen').classList.remove('hidden');
-  document.querySelector('.admin-link-wrap').classList.remove('hidden');
+  document.getElementById('admin-tap-zone').classList.remove('hidden');
   toast('Logged out', '');
 }
 
