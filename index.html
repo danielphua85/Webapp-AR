@@ -244,43 +244,66 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
 #ar-screen{position:fixed;inset:0;z-index:8000;background:#000;display:none;flex-direction:column;}
 #ar-screen.show{display:flex;}
 
-/* Live camera preview — shows INSTANTLY, behind everything */
-#preview-video{
-  position:absolute;inset:0;
-  width:100%;height:100%;
-  object-fit:cover;
-  z-index:8010;
-}
-
-/* Compile overlay — semi-transparent, sits over live camera */
 #ar-loading{
   position:absolute;inset:0;z-index:8500;
-  background:rgba(0,0,0,.55);
+  background:linear-gradient(135deg,#0b0f1a 0%,#0d1b2a 100%);
   display:flex;flex-direction:column;
-  align-items:center;justify-content:center;gap:14px;
+  align-items:center;justify-content:center;gap:0;
+  padding:40px 32px;
 }
-/* When compiling, show a small pill at bottom instead of full dark overlay */
-#ar-loading.compiling{
-  background:transparent;
-  justify-content:flex-end;
-  padding-bottom:90px;
+/* Logo area */
+.load-logo{
+  font-family:'Space Mono',monospace;font-size:22px;font-weight:700;
+  color:var(--teal);letter-spacing:-0.5px;margin-bottom:6px;
 }
-#compile-pill{
-  background:rgba(0,0,0,.8);
-  border:1px solid rgba(34,211,238,.4);
-  border-radius:30px;
-  padding:10px 20px;
-  display:flex;align-items:center;gap:10px;
-  display:none;
+.load-tagline{
+  font-size:12px;color:rgba(255,255,255,.4);
+  letter-spacing:2px;text-transform:uppercase;margin-bottom:48px;
 }
-#compile-pill.show{display:flex;}
-.pill-spinner{width:16px;height:16px;border:2px solid rgba(34,211,238,.3);border-top-color:var(--teal);border-radius:50%;animation:spin 1s linear infinite;flex-shrink:0;}
-#compile-pill-text{font-family:'Space Mono',monospace;font-size:11px;color:var(--teal);letter-spacing:1px;}
+/* Step indicators */
+.load-steps{
+  width:100%;max-width:300px;margin-bottom:32px;
+  display:flex;flex-direction:column;gap:14px;
+}
+.load-step{
+  display:flex;align-items:center;gap:12px;
+  opacity:.3;transition:opacity .4s;
+}
+.load-step.active{opacity:1;}
+.load-step.done{opacity:.6;}
+.step-icon{
+  width:32px;height:32px;border-radius:50%;
+  border:2px solid rgba(34,211,238,.3);
+  display:flex;align-items:center;justify-content:center;
+  font-size:13px;flex-shrink:0;
+  transition:all .4s;
+}
+.load-step.active .step-icon{
+  border-color:var(--teal);
+  background:rgba(34,211,238,.15);
+  animation:pulse-step 1.5s ease-in-out infinite;
+}
+.load-step.done .step-icon{
+  border-color:var(--green);background:rgba(16,185,129,.15);
+}
+@keyframes pulse-step{0%,100%{box-shadow:0 0 0 0 rgba(34,211,238,.3)}50%{box-shadow:0 0 0 6px rgba(34,211,238,0)}}
+.step-text{font-size:13px;color:var(--text);font-weight:500;}
+.step-sub{font-size:11px;color:var(--muted);margin-top:1px;}
+/* Progress bar */
+.load-progress-wrap{
+  width:100%;max-width:300px;
+  background:rgba(255,255,255,.08);border-radius:8px;height:4px;overflow:hidden;
+  margin-bottom:12px;
+}
+.load-progress-bar{
+  height:100%;background:linear-gradient(90deg,var(--accent),var(--teal));
+  border-radius:8px;transition:width .4s ease;width:0%;
+}
+#load-pct{
+  font-family:'Space Mono',monospace;font-size:11px;
+  color:var(--muted);letter-spacing:1px;
+}
 
-.ar-spinner{width:50px;height:50px;border:3px solid rgba(34,211,238,.2);border-top-color:var(--teal);border-radius:50%;animation:spin 1s linear infinite;}
-@keyframes spin{to{transform:rotate(360deg);}}
-.ar-load-title{font-family:'Space Mono',monospace;font-size:12px;color:var(--teal);letter-spacing:3px;text-transform:uppercase;}
-#ar-load-detail{font-size:11px;color:var(--muted);}
 
 #ar-hud{position:absolute;inset:0;z-index:8100;pointer-events:none;}
 .arc{position:absolute;width:20px;height:20px;border-color:rgba(34,211,238,.6);border-style:solid;}
@@ -553,19 +576,38 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
      AR SCANNER SCREEN (shared by guest & admin)
 ════════════════════════════════════════ -->
 <div id="ar-screen">
-  <!-- Instant camera preview — appears before MindAR loads -->
-  <video id="preview-video" autoplay playsinline muted></video>
-
   <div id="ar-loading">
-    <div class="ar-spinner"></div>
-    <div class="ar-load-title" id="ar-load-title">Loading AR Engine</div>
-    <div id="ar-load-detail">Preparing...</div>
-  </div>
+    <div class="load-logo">AR Magic</div>
+    <div class="load-tagline">Preparing Scanner</div>
 
-  <!-- Small pill shown at bottom while compiling over live camera -->
-  <div id="compile-pill">
-    <div class="pill-spinner"></div>
-    <div id="compile-pill-text">Preparing AR...</div>
+    <div class="load-steps">
+      <div class="load-step" id="step1">
+        <div class="step-icon">📥</div>
+        <div>
+          <div class="step-text">Loading targets</div>
+          <div class="step-sub" id="step1-sub">Fetching from library...</div>
+        </div>
+      </div>
+      <div class="load-step" id="step2">
+        <div class="step-icon">⚙️</div>
+        <div>
+          <div class="step-text">Building tracker</div>
+          <div class="step-sub" id="step2-sub">Compiling AR data...</div>
+        </div>
+      </div>
+      <div class="load-step" id="step3">
+        <div class="step-icon">📷</div>
+        <div>
+          <div class="step-text">Starting camera</div>
+          <div class="step-sub">Ready to scan</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="load-progress-wrap">
+      <div class="load-progress-bar" id="load-progress-bar"></div>
+    </div>
+    <div id="load-pct">0%</div>
   </div>
   <div id="ar-hud">
     <div class="arc tl"></div><div class="arc tr"></div>
@@ -618,8 +660,20 @@ window.addEventListener('load', () => {
 // ════════════════════════════════
 // GUEST — AR Scanner
 // ════════════════════════════════
-// Camera preview stream — held open while compiling
-let _previewStream = null;
+// Progress UI helpers
+function setStep(n) {
+  // n = 1,2,3
+  [1,2,3].forEach(i => {
+    const el = document.getElementById('step'+i);
+    el.classList.remove('active','done');
+    if (i < n)  el.classList.add('done');
+    if (i === n) el.classList.add('active');
+  });
+}
+function setProgress(pct, label) {
+  document.getElementById('load-progress-bar').style.width = pct + '%';
+  document.getElementById('load-pct').textContent = label || Math.round(pct) + '%';
+}
 
 async function startARScanner() {
   arCallerIsAdmin = false;
@@ -627,64 +681,29 @@ async function startARScanner() {
     toast('AR not configured yet. Contact the admin.', 'warn');
     return;
   }
-
-  // ── STEP 1: Show AR screen immediately ──
   document.getElementById('ar-screen').classList.add('show');
-
-  // ── STEP 2: Open camera RIGHT NOW — this triggers iOS permission dialog ──
-  // Show minimal loading while waiting for permission only
   document.getElementById('ar-loading').style.display = 'flex';
-  document.getElementById('ar-load-title').textContent = 'Starting Camera';
-  document.getElementById('ar-load-detail').textContent = 'Please allow camera access...';
 
-  try {
-    _previewStream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: 'environment' },
-      audio: false
-    });
-    // Camera granted — show live feed IMMEDIATELY
-    const previewVid = document.getElementById('preview-video');
-    previewVid.srcObject = _previewStream;
-    // Hide the loading overlay — user now sees live camera
-    document.getElementById('ar-loading').style.display = 'none';
-    // Show small compile pill at bottom
-    document.getElementById('compile-pill').classList.add('show');
-  } catch(e) {
-    // Camera denied or error
-    document.getElementById('ar-screen').classList.remove('show');
-    document.getElementById('ar-loading').style.display = 'flex';
-    document.getElementById('ar-load-title').textContent = 'Camera Blocked';
-    document.getElementById('ar-load-detail').textContent = 'Go to Settings → Safari → Camera → Allow';
-    return;
-  }
-
-  // ── STEP 3: Compile AR data in background while user sees camera ──
+  // Step 1: Fetch targets
+  setStep(1); setProgress(5, 'Loading...');
   try {
     const targets = await fetchRecords();
     const ready = targets.filter(t => t.mind_url && t.video_url);
     if (!ready.length) {
       toast('No AR targets available yet.', 'warn');
-      stopPreview();
       document.getElementById('ar-screen').classList.remove('show');
       return;
     }
+    document.getElementById('step1-sub').textContent = ready.length + ' target(s) found';
+    setProgress(15, '15%');
+
+    // Step 2: Build scene (compile)
+    setStep(2);
     await buildARScene(ready);
-    // stopPreview already called inside buildARScene before MindAR starts
   } catch(e) {
     toast('AR Error: ' + e.message, 'error');
-    stopPreview(); // ensure cleanup if buildARScene throws early
     document.getElementById('ar-screen').classList.remove('show');
   }
-}
-
-function stopPreview() {
-  if (_previewStream) {
-    _previewStream.getTracks().forEach(t => t.stop());
-    _previewStream = null;
-  }
-  const v = document.getElementById('preview-video');
-  if (v) { v.srcObject = null; }
-  document.getElementById('compile-pill').classList.remove('show');
 }
 
 function openARFromAdmin() {
@@ -693,7 +712,6 @@ function openARFromAdmin() {
 }
 
 function closeARScanner() {
-  stopPreview();
   const scene = document.getElementById('ar-scene-el');
   if (scene) {
     try {
@@ -1099,34 +1117,26 @@ async function buildARScene(targets) {
   const images = [];
   const aspects = [];
   for (let i = 0; i < targets.length; i++) {
-    document.getElementById('ar-load-detail').textContent = `Loading image ${i+1}/${targets.length}...`;
+    document.getElementById('step1-sub').textContent = `Loading image ${i+1}/${targets.length}...`;
+    setProgress(15 + (i/targets.length)*15, '');
     const img = await loadImgFromUrl(targets[i].image_url);
     images.push(img);
     aspects.push(img.naturalHeight / img.naturalWidth);
   }
 
-  document.getElementById('ar-load-title').textContent = 'Building Tracker';
+  document.getElementById('step2-sub').textContent = 'Compiling AR data...';
+  setProgress(30, '30%');
   const compiler = new window.MINDAR.IMAGE.Compiler();
   await compiler.compileImageTargets(images, p => {
-    const pct = Math.round(p*100);
-    document.getElementById('compile-pill-text').textContent = `Preparing AR... ${pct}%`;
-    document.getElementById('ar-load-detail').textContent = `Compiling... ${pct}%`;
+    const pct = 30 + Math.round(p * 55);
+    setProgress(pct, pct + '%');
+    document.getElementById('step2-sub').textContent = `Compiling... ${Math.round(p*100)}%`;
   });
   const mindBuffer = await compiler.exportData();
   const mindUrl    = URL.createObjectURL(new Blob([mindBuffer], { type:'application/octet-stream' }));
 
-  // ── CRITICAL: Stop preview stream BEFORE MindAR starts its own camera ──
-  // Both cannot run simultaneously — causes blue/black screen conflict
-  stopPreview();
-  // Show brief loading overlay during camera handover (400ms)
-  document.getElementById('ar-loading').style.display = 'flex';
-  document.getElementById('ar-load-title').textContent = 'Starting Camera';
-  document.getElementById('ar-load-detail').textContent = 'Almost ready...';
-  // Brief pause to let iOS fully release the camera before MindAR grabs it
-  await new Promise(r => setTimeout(r, 400));
-
-  document.getElementById('ar-load-title').textContent = 'Starting Camera';
-  document.getElementById('ar-load-detail').textContent = 'Almost ready...';
+  // Step 3: Starting camera
+  setStep(3); setProgress(90, '90%');
 
   const assetsHtml = targets.map((t,i) =>
     `<video id="arvid${i}" src="${t.video_url}" playsinline webkit-playsinline muted loop crossorigin="anonymous" preload="auto"></video>`
@@ -1165,7 +1175,10 @@ async function buildARScene(targets) {
   const scene = document.getElementById('ar-scene-el');
 
   scene.addEventListener('loaded', () => {
-    document.getElementById('ar-loading').style.display = 'none';
+    setStep(3); setProgress(100, '100%');
+    setTimeout(() => {
+      document.getElementById('ar-loading').style.display = 'none';
+    }, 300);
     setARStatus('Point at a target image...');
     const sys = scene.systems && scene.systems['mindar-image-system'];
     if (sys) try { sys.start(); } catch(e) {}
