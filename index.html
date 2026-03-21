@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
-<title>AR Magic Library v17-20260321-191207</title>
+<title>AR Magic Library</title>
 <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
 <style>
@@ -246,64 +246,13 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
 
 #ar-loading{
   position:absolute;inset:0;z-index:8500;
-  background:linear-gradient(135deg,#0b0f1a 0%,#0d1b2a 100%);
-  display:flex;flex-direction:column;
-  align-items:center;justify-content:center;gap:0;
-  padding:40px 32px;
+  background:rgba(0,0,0,.93);display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:14px;
 }
-/* Logo area */
-.load-logo{
-  font-family:'Space Mono',monospace;font-size:22px;font-weight:700;
-  color:var(--teal);letter-spacing:-0.5px;margin-bottom:6px;
-}
-.load-tagline{
-  font-size:12px;color:rgba(255,255,255,.4);
-  letter-spacing:2px;text-transform:uppercase;margin-bottom:48px;
-}
-/* Step indicators */
-.load-steps{
-  width:100%;max-width:300px;margin-bottom:32px;
-  display:flex;flex-direction:column;gap:14px;
-}
-.load-step{
-  display:flex;align-items:center;gap:12px;
-  opacity:.3;transition:opacity .4s;
-}
-.load-step.active{opacity:1;}
-.load-step.done{opacity:.6;}
-.step-icon{
-  width:32px;height:32px;border-radius:50%;
-  border:2px solid rgba(34,211,238,.3);
-  display:flex;align-items:center;justify-content:center;
-  font-size:13px;flex-shrink:0;
-  transition:all .4s;
-}
-.load-step.active .step-icon{
-  border-color:var(--teal);
-  background:rgba(34,211,238,.15);
-  animation:pulse-step 1.5s ease-in-out infinite;
-}
-.load-step.done .step-icon{
-  border-color:var(--green);background:rgba(16,185,129,.15);
-}
-@keyframes pulse-step{0%,100%{box-shadow:0 0 0 0 rgba(34,211,238,.3)}50%{box-shadow:0 0 0 6px rgba(34,211,238,0)}}
-.step-text{font-size:13px;color:var(--text);font-weight:500;}
-.step-sub{font-size:11px;color:var(--muted);margin-top:1px;}
-/* Progress bar */
-.load-progress-wrap{
-  width:100%;max-width:300px;
-  background:rgba(255,255,255,.08);border-radius:8px;height:4px;overflow:hidden;
-  margin-bottom:12px;
-}
-.load-progress-bar{
-  height:100%;background:linear-gradient(90deg,var(--accent),var(--teal));
-  border-radius:8px;transition:width .4s ease;width:0%;
-}
-#load-pct{
-  font-family:'Space Mono',monospace;font-size:11px;
-  color:var(--muted);letter-spacing:1px;
-}
-
+.ar-spinner{width:50px;height:50px;border:3px solid rgba(34,211,238,.2);border-top-color:var(--teal);border-radius:50%;animation:spin 1s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.ar-load-title{font-family:'Space Mono',monospace;font-size:12px;color:var(--teal);letter-spacing:3px;text-transform:uppercase;}
+#ar-load-detail{font-size:11px;color:var(--muted);}
 
 #ar-hud{position:absolute;inset:0;z-index:8100;pointer-events:none;}
 .arc{position:absolute;width:20px;height:20px;border-color:rgba(34,211,238,.6);border-style:solid;}
@@ -577,37 +526,9 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
 ════════════════════════════════════════ -->
 <div id="ar-screen">
   <div id="ar-loading">
-    <div class="load-logo">AR Magic</div>
-    <div class="load-tagline">Preparing Scanner</div>
-
-    <div class="load-steps">
-      <div class="load-step" id="step1">
-        <div class="step-icon">📥</div>
-        <div>
-          <div class="step-text">Loading targets</div>
-          <div class="step-sub" id="step1-sub">Fetching from library...</div>
-        </div>
-      </div>
-      <div class="load-step" id="step2">
-        <div class="step-icon">⚙️</div>
-        <div>
-          <div class="step-text">Building tracker</div>
-          <div class="step-sub" id="step2-sub">Compiling AR data...</div>
-        </div>
-      </div>
-      <div class="load-step" id="step3">
-        <div class="step-icon">📷</div>
-        <div>
-          <div class="step-text">Starting camera</div>
-          <div class="step-sub">Ready to scan</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="load-progress-wrap">
-      <div class="load-progress-bar" id="load-progress-bar"></div>
-    </div>
-    <div id="load-pct">0%</div>
+    <div class="ar-spinner"></div>
+    <div class="ar-load-title" id="ar-load-title">Loading AR Engine</div>
+    <div id="ar-load-detail">Preparing...</div>
   </div>
   <div id="ar-hud">
     <div class="arc tl"></div><div class="arc tr"></div>
@@ -660,21 +581,6 @@ window.addEventListener('load', () => {
 // ════════════════════════════════
 // GUEST — AR Scanner
 // ════════════════════════════════
-// Progress UI helpers
-function setStep(n) {
-  // n = 1,2,3
-  [1,2,3].forEach(i => {
-    const el = document.getElementById('step'+i);
-    el.classList.remove('active','done');
-    if (i < n)  el.classList.add('done');
-    if (i === n) el.classList.add('active');
-  });
-}
-function setProgress(pct, label) {
-  document.getElementById('load-progress-bar').style.width = pct + '%';
-  document.getElementById('load-pct').textContent = label || Math.round(pct) + '%';
-}
-
 async function startARScanner() {
   arCallerIsAdmin = false;
   if (!SB_URL || !SB_KEY) {
@@ -683,9 +589,8 @@ async function startARScanner() {
   }
   document.getElementById('ar-screen').classList.add('show');
   document.getElementById('ar-loading').style.display = 'flex';
-
-  // Step 1: Fetch targets
-  setStep(1); setProgress(5, 'Loading...');
+  document.getElementById('ar-load-title').textContent = 'Loading AR Engine';
+  document.getElementById('ar-load-detail').textContent = 'Fetching targets...';
   try {
     const targets = await fetchRecords();
     const ready = targets.filter(t => t.mind_url && t.video_url);
@@ -694,11 +599,6 @@ async function startARScanner() {
       document.getElementById('ar-screen').classList.remove('show');
       return;
     }
-    document.getElementById('step1-sub').textContent = ready.length + ' target(s) found';
-    setProgress(15, '15%');
-
-    // Step 2: Build scene (compile)
-    setStep(2);
     await buildARScene(ready);
   } catch(e) {
     toast('AR Error: ' + e.message, 'error');
@@ -885,32 +785,32 @@ async function uploadTarget() {
   btn.disabled = true; btn.textContent = '⏳ Working...';
 
   try {
-    setUploadProgress(true, 'Analysing image...', 0);
-    const mindBuffer = await compileMind(imgFile, p => setUploadProgress(true, 'Compiling AR data...', p * 78));
+    setProgress(true, 'Analysing image...', 0);
+    const mindBuffer = await compileMind(imgFile, p => setProgress(true, 'Compiling AR data...', p * 78));
 
-    setUploadProgress(true, 'Uploading image...', 80);
+    setProgress(true, 'Uploading image...', 80);
     const imgUrl = await uploadFile(imgFile, `images/${Date.now()}_${sanitize(imgFile.name)}`);
 
-    setUploadProgress(true, 'Uploading video...', 87);
+    setProgress(true, 'Uploading video...', 87);
     const vidUrl = await uploadFile(vidFile, `videos/${Date.now()}_${sanitize(vidFile.name)}`);
 
-    setUploadProgress(true, 'Uploading AR tracking data...', 93);
+    setProgress(true, 'Uploading AR tracking data...', 93);
     const mindBlob = new Blob([mindBuffer], { type:'application/octet-stream' });
     const mindF    = new File([mindBlob], `${Date.now()}_target.mind`);
     const mindUrl  = await uploadFile(mindF, `minds/${mindF.name}`);
 
-    setUploadProgress(true, 'Saving to library...', 98);
+    setProgress(true, 'Saving to library...', 98);
     await insertRecord({ name, image_url: imgUrl, video_url: vidUrl, mind_url: mindUrl });
 
-    setUploadProgress(true, '✓ Done!', 100);
-    setTimeout(() => setUploadProgress(false), 1200);
+    setProgress(true, '✓ Done!', 100);
+    setTimeout(() => setProgress(false), 1200);
     toast('✓ Saved to library!', 'success');
     resetForm();
     switchTab('library');
   } catch(e) {
     console.error(e);
     toast('Error: ' + e.message, 'error');
-    setUploadProgress(false);
+    setProgress(false);
   } finally {
     btn.disabled = false;
     btn.innerHTML = '🚀 Compile &amp; Save to Library';
@@ -935,7 +835,7 @@ async function compileMind(imageFile, onProgress) {
   });
 }
 
-function setUploadProgress(show, label, pct) {
+function setProgress(show, label, pct) {
   const el = document.getElementById('compile-progress');
   if (!show) { el.classList.remove('show'); return; }
   el.classList.add('show');
@@ -1117,27 +1017,22 @@ async function buildARScene(targets) {
   const images = [];
   const aspects = [];
   for (let i = 0; i < targets.length; i++) {
-    document.getElementById('step1-sub').textContent = `Loading image ${i+1}/${targets.length}...`;
-    setProgress(15 + (i/targets.length)*15, '');
+    document.getElementById('ar-load-detail').textContent = `Loading image ${i+1}/${targets.length}...`;
     const img = await loadImgFromUrl(targets[i].image_url);
     images.push(img);
     aspects.push(img.naturalHeight / img.naturalWidth);
   }
 
-  document.getElementById('step2-sub').textContent = 'Compiling AR data...';
-  setProgress(30, '30%');
+  document.getElementById('ar-load-title').textContent = 'Building Tracker';
   const compiler = new window.MINDAR.IMAGE.Compiler();
   await compiler.compileImageTargets(images, p => {
-    // p is 0.0 to 1.0 — do NOT multiply by 100 for display
-    const pct = 30 + Math.round(p * 55);
-    setProgress(pct, pct + '%');
-    document.getElementById('step2-sub').textContent = `Compiling... ${Math.round(p * 100)}%`;
+    document.getElementById('ar-load-detail').textContent = `Compiling... ${Math.round(p*100)}%`;
   });
   const mindBuffer = await compiler.exportData();
   const mindUrl    = URL.createObjectURL(new Blob([mindBuffer], { type:'application/octet-stream' }));
 
-  // Step 3: Starting camera
-  setStep(3); setProgress(90, '90%');
+  document.getElementById('ar-load-title').textContent = 'Starting Camera';
+  document.getElementById('ar-load-detail').textContent = 'Almost ready...';
 
   const assetsHtml = targets.map((t,i) =>
     `<video id="arvid${i}" src="${t.video_url}" playsinline webkit-playsinline muted loop crossorigin="anonymous" preload="auto"></video>`
@@ -1176,19 +1071,12 @@ async function buildARScene(targets) {
   const scene = document.getElementById('ar-scene-el');
 
   scene.addEventListener('loaded', () => {
-    setStep(3); setProgress(100, '100%');
-
-    // ── CRITICAL: Hide loading FIRST, then start MindAR camera ──
-    // iOS will not show the camera permission dialog if the screen
-    // is covered by another element. Clear it before calling sys.start().
     document.getElementById('ar-loading').style.display = 'none';
     setARStatus('Point at a target image...');
-
-    // Small delay to ensure loading overlay is fully gone before camera starts
     setTimeout(() => {
       const sys = scene.systems && scene.systems['mindar-image-system'];
-      if (sys) try { sys.start(); } catch(e) { console.warn('sys.start:', e); }
-    }, 100);
+      if (sys) try { sys.start(); } catch(e) {}
+    }, 150);
 
     // Reset sound state for this session
     _arMuted = true;
