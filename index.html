@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
-<title>AR Magic v18c</title>
+<title>AR Magic v18d</title>
 <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
 <style>
@@ -189,7 +189,7 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
     <span class="scan-icon">📷</span>
     <span class="scan-label">Scan</span>
   </button>
-  <p class="guest-hint">Tap the button above to open the camera<br>Then point it at any target image</p><p style="position:fixed;bottom:4px;left:50%;transform:translateX(-50%);font-size:9px;color:rgba(255,255,255,.2);font-family:monospace;">v18c</p>
+  <p class="guest-hint">Tap the button above to open the camera<br>Then point it at any target image</p><p style="position:fixed;bottom:4px;left:50%;transform:translateX(-50%);font-size:9px;color:rgba(255,255,255,.2);font-family:monospace;">v18d</p>
 </div>
 
 <!-- INVISIBLE ADMIN TAP ZONE (triple-tap top-right) -->
@@ -345,7 +345,7 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
 
 <script>
 'use strict';
-console.log('=== AR Magic v18c loaded ===');
+console.log('=== AR Magic v18d loaded ===');
 
 // ── CONFIG ──
 const BUCKET = 'ar-assets';
@@ -657,6 +657,7 @@ async function requestCameraThenBuild() {
     const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode:'environment' } });
     // Permission granted — stop this stream and wait for iOS to fully release camera
     stream.getTracks().forEach(t => t.stop());
+    startProgressBar(); // start smooth 35s bar now
     await new Promise(r => setTimeout(r, 1500));
 
     const targets = await dbFetch();
@@ -670,13 +671,37 @@ async function requestCameraThenBuild() {
   }
 }
 
-function setARProgress(pct, title, detail, tip) {
+// ── ANIMATED PROGRESS BAR (time-based, 35s 0→100%) ──
+let _progressTimer = null;
+let _progressPct = 0;
+
+function startProgressBar() {
+  _progressPct = 0;
   const bar = document.getElementById('ar-load-bar');
   const wrap = document.getElementById('ar-load-bar-wrap');
-  const tipEl = document.getElementById('ar-load-tip');
-  if (bar) { wrap.style.display = 'block'; bar.style.width = pct + '%'; }
+  if (wrap) wrap.style.display = 'block';
+  if (bar) bar.style.transition = 'none';
+  if (bar) bar.style.width = '0%';
+
+  clearInterval(_progressTimer);
+  // Tick every 350ms → 100 ticks over 35s = 1% per tick
+  _progressTimer = setInterval(() => {
+    _progressPct += 1;
+    if (_progressPct >= 99) { _progressPct = 99; clearInterval(_progressTimer); }
+    if (bar) { bar.style.transition = 'width .35s linear'; bar.style.width = _progressPct + '%'; }
+  }, 350);
+}
+
+function finishProgressBar() {
+  clearInterval(_progressTimer);
+  const bar = document.getElementById('ar-load-bar');
+  if (bar) { bar.style.transition = 'width .4s ease'; bar.style.width = '100%'; }
+}
+
+function setARProgress(pct, title, detail, tip) {
   if (title) document.getElementById('ar-load-title').textContent = title;
   if (detail) document.getElementById('ar-load-detail').textContent = detail;
+  const tipEl = document.getElementById('ar-load-tip');
   if (tipEl) { tipEl.style.display = tip ? 'block' : 'none'; if (tip) tipEl.textContent = tip; }
 }
 
@@ -751,7 +776,8 @@ async function buildARScene(targets) {
   });
 
   scene.addEventListener('arReady', () => {
-    setARProgress(100, 'Ready!', 'Point at a target image', null);
+    finishProgressBar();
+    setARProgress(100, 'Ready! 🎯', 'Point at a target image', null);
     setTimeout(() => {
       document.getElementById('ar-loading').style.display = 'none';
       setARStatus('Point at a target image...');
@@ -810,6 +836,7 @@ function loadImg(url) {
 }
 
 function closeAR() {
+  clearInterval(_progressTimer);
   const scene = document.getElementById('ar-scene-el');
   if (scene) {
     try { const sys=scene.systems&&scene.systems['mindar-image-system']; if(sys&&sys.stop) sys.stop(); } catch(e) {}
