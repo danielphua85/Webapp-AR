@@ -1122,44 +1122,53 @@ async function buildARScene(targets) {
     root.appendChild(ent);
   });
 
-  // ── Update the mind URL on the existing scene ──
-  // Must stop first if already running
-  try {
-    const sys = scene.systems && scene.systems['mindar-image-system'];
-    if (sys && sys.stop) sys.stop();
-  } catch(e) {}
+  // ── Properly restart MindAR with new mind URL ──
+  // setAttribute alone doesn't reload — we must fully stop, reinit, then start
 
-  // Wait one tick then update imageTargetSrc and restart
-  await new Promise(r => setTimeout(r, 100));
+  const sys0 = scene.systems && scene.systems['mindar-image-system'];
+  if (sys0 && sys0.stop) {
+    try { sys0.stop(); } catch(e) {}
+  }
 
+  // Give browser a moment to release camera
+  await new Promise(r => setTimeout(r, 300));
+
+  // Update the imageTargetSrc attribute — MindAR reads this on next start
   scene.setAttribute('mindar-image',
     `imageTargetSrc:${mindUrl};autoStart:false;uiLoading:none;uiScanning:none;uiError:none;filterMinCF:0.00001;filterBeta:10000;warmupTolerance:3;missTolerance:10;`
   );
 
-  // ── Wait for loaded then start ──
+  // Give A-Frame time to process the attribute change
+  await new Promise(r => setTimeout(r, 300));
+
+  // ── Start MindAR ──
   function startWhenReady() {
     return new Promise((resolve) => {
+      let attempts = 0;
       function tryStart() {
+        attempts++;
         const sys = scene.systems && scene.systems['mindar-image-system'];
         if (sys) {
-          try { sys.start(); } catch(e) { console.warn('sys.start error:', e); }
+          try { sys.start(); } catch(e) { console.warn('sys.start:', e); }
           resolve();
+        } else if (attempts < 30) {
+          setTimeout(tryStart, 300);
         } else {
-          setTimeout(tryStart, 200);
+          console.error('MindAR system not found after 9s');
+          resolve(); // continue anyway
         }
       }
-
       if (scene.hasLoaded) {
         tryStart();
       } else {
-        scene.addEventListener('loaded', () => tryStart(), { once: true });
+        scene.addEventListener('loaded', () => setTimeout(tryStart, 200), { once: true });
       }
     });
   }
 
   await startWhenReady();
 
-  // Hide loading
+  // Hide loading — camera is live
   document.getElementById('ar-loading').style.display = 'none';
   setARStatus('Point at a target image...');
 
@@ -1169,7 +1178,10 @@ async function buildARScene(targets) {
   if (sndBtn) { sndBtn.textContent = '🔇'; sndBtn.classList.remove('unmuted'); }
   setTimeout(showMuteHint, 1200);
 
-  // ── Attach target events ──
+  // ── Attach target events AFTER scene is running ──
+  // Small delay to ensure entities are registered by MindAR
+  await new Promise(r => setTimeout(r, 500));
+
   targets.forEach((target, i) => {
     const ent   = document.getElementById(`artgt${i}`);
     const vidEl = document.getElementById(`arvid${i}`);
