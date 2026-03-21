@@ -280,6 +280,27 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
 }
 #ar-sound-btn:hover{background:rgba(255,255,255,.22);}
 #ar-sound-btn.unmuted{background:rgba(34,211,238,.2);border-color:rgba(34,211,238,.5);}
+
+/* Landscape rotate button */
+#ar-rotate-btn{
+  background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);
+  color:#fff;font-size:16px;width:38px;height:38px;border-radius:8px;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:all .2s;flex-shrink:0;
+}
+#ar-rotate-btn:hover{background:rgba(255,255,255,.22);}
+#ar-rotate-btn.active{background:rgba(34,211,238,.2);border-color:rgba(34,211,238,.5);}
+
+/* CSS rotate trick — keeps camera in portrait (iOS requirement)
+   but visually rotates the whole AR screen to fill landscape */
+#ar-screen.landscape-mode{
+  transform-origin: center center;
+  transform: rotate(90deg);
+  width: 100vh !important;
+  height: 100vw !important;
+  top: calc((100vh - 100vw) / 2) !important;
+  left: calc((100vw - 100vh) / 2) !important;
+}
 /* Muted hint banner — fades in then out */
 #ar-mute-hint{
   position:absolute;top:70px;left:50%;transform:translateX(-50%);
@@ -538,6 +559,7 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
   <div id="ar-topbar">
     <div class="ar-live-label"><div class="ar-dot"></div>AR LIVE</div>
     <div style="display:flex;gap:8px;align-items:center;">
+      <button id="ar-rotate-btn" onclick="toggleLandscape()" title="Toggle landscape">⤢</button>
       <button id="ar-sound-btn" onclick="toggleARSound()" title="Toggle sound">🔇</button>
       <button id="ar-close" onclick="closeARScanner()">✕ Close</button>
     </div>
@@ -614,7 +636,6 @@ function openARFromAdmin() {
 function closeARScanner() {
   const scene = document.getElementById('ar-scene-el');
   if (scene) {
-    // Remove orientation listener
     if (scene._orientHandler) {
       window.removeEventListener('orientationchange', scene._orientHandler);
       window.removeEventListener('resize', scene._orientHandler);
@@ -626,6 +647,13 @@ function closeARScanner() {
     } catch(e) {}
     document.querySelectorAll('#ar-scene-wrap video').forEach(v => { v.pause(); v.src=''; });
   }
+  // Reset landscape mode
+  _isLandscape = false;
+  const arScreen = document.getElementById('ar-screen');
+  arScreen.classList.remove('landscape-mode');
+  const rotBtn = document.getElementById('ar-rotate-btn');
+  if (rotBtn) { rotBtn.classList.remove('active'); rotBtn.textContent = '⤢'; }
+
   _activeVideos = new Set();
   _arMuted = true;
   document.getElementById('ar-scene-wrap').innerHTML = '';
@@ -1221,6 +1249,27 @@ function loadImgFromUrl(url) {
 }
 
 function setARStatus(t) { document.getElementById('ar-status').textContent = t; }
+
+// ── Landscape toggle ──────────────────────────────
+// Uses CSS transform to rotate the AR screen 90°.
+// The camera stays in portrait mode (iOS Safari requirement) —
+// we just visually spin the display to fill landscape.
+let _isLandscape = false;
+function toggleLandscape() {
+  const screen = document.getElementById('ar-screen');
+  const btn    = document.getElementById('ar-rotate-btn');
+  _isLandscape = !_isLandscape;
+  if (_isLandscape) {
+    screen.classList.add('landscape-mode');
+    btn.classList.add('active');
+    btn.textContent = '⤡'; // icon flips to indicate "restore portrait"
+    toast('Landscape mode ON — tap ⤡ to go back', '');
+  } else {
+    screen.classList.remove('landscape-mode');
+    btn.classList.remove('active');
+    btn.textContent = '⤢';
+  }
+}
 
 // ── Sound control ──────────────────────────────
 let _arMuted = true;          // starts muted (browser requirement)
