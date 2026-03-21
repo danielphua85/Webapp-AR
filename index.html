@@ -280,20 +280,6 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
 }
 #ar-sound-btn:hover{background:rgba(255,255,255,.22);}
 #ar-sound-btn.unmuted{background:rgba(34,211,238,.2);border-color:rgba(34,211,238,.5);}
-#ar-ls-btn{
-  background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);
-  color:#fff;font-size:15px;width:38px;height:38px;border-radius:8px;
-  cursor:pointer;display:flex;align-items:center;justify-content:center;
-  transition:all .2s;flex-shrink:0;
-}
-#ar-ls-btn.on{background:rgba(34,211,238,.2);border-color:rgba(34,211,238,.5);}
-#ar-screen.ls{
-  transform:rotate(90deg);
-  transform-origin:center center;
-  width:100vh;height:100vw;
-  top:calc((100vh - 100vw)/2);
-  left:calc((100vw - 100vh)/2);
-}
 /* Muted hint banner — fades in then out */
 #ar-mute-hint{
   position:absolute;top:70px;left:50%;transform:translateX(-50%);
@@ -552,7 +538,6 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
   <div id="ar-topbar">
     <div class="ar-live-label"><div class="ar-dot"></div>AR LIVE</div>
     <div style="display:flex;gap:8px;align-items:center;">
-      <button id="ar-ls-btn" onclick="toggleLS()" title="Landscape">⤢</button>
       <button id="ar-sound-btn" onclick="toggleARSound()" title="Toggle sound">🔇</button>
       <button id="ar-close" onclick="closeARScanner()">✕ Close</button>
     </div>
@@ -596,28 +581,72 @@ window.addEventListener('load', () => {
 // ════════════════════════════════
 // GUEST — AR Scanner
 // ════════════════════════════════
+// Camera permission pre-request
+// iOS Safari requires getUserMedia to be called IMMEDIATELY after a user tap.
+// If we wait 20-30s for compile first, iOS silently blocks the permission dialog.
+// Solution: grab camera stream RIGHT NOW on tap, then compile in background.
+let _preCameraStream = null;
+
+async function preCameraRequest() {
+  try {
+    // Request camera immediately — this is what triggers iOS permission dialog
+    _preCameraStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: 'environment' },
+      audio: false
+    });
+    return true;
+  } catch(e) {
+    console.warn('Pre-camera request failed:', e.message);
+    _preCameraStream = null;
+    return false;
+  }
+}
+
 async function startARScanner() {
   arCallerIsAdmin = false;
   if (!SB_URL || !SB_KEY) {
     toast('AR not configured yet. Contact the admin.', 'warn');
     return;
   }
+
   document.getElementById('ar-screen').classList.add('show');
   document.getElementById('ar-loading').style.display = 'flex';
+  document.getElementById('ar-load-title').textContent = 'Requesting Camera';
+  document.getElementById('ar-load-detail').textContent = 'Please allow camera access...';
+
+  // ── STEP 1: Request camera FIRST (iOS Safari gesture requirement) ──
+  const camOK = await preCameraRequest();
+  if (!camOK) {
+    document.getElementById('ar-load-title').textContent = 'Camera needed';
+    document.getElementById('ar-load-detail').textContent = 'Please allow camera in Settings → Safari → Camera';
+    return; // stay on loading screen with message
+  }
+
+  // ── STEP 2: Now fetch targets and compile (camera already granted) ──
   document.getElementById('ar-load-title').textContent = 'Loading AR Engine';
   document.getElementById('ar-load-detail').textContent = 'Fetching targets...';
+
   try {
     const targets = await fetchRecords();
     const ready = targets.filter(t => t.mind_url && t.video_url);
     if (!ready.length) {
       toast('No AR targets available yet.', 'warn');
+      stopPreCameraStream();
       document.getElementById('ar-screen').classList.remove('show');
       return;
     }
     await buildARScene(ready);
   } catch(e) {
     toast('AR Error: ' + e.message, 'error');
+    stopPreCameraStream();
     document.getElementById('ar-screen').classList.remove('show');
+  }
+}
+
+function stopPreCameraStream() {
+  if (_preCameraStream) {
+    _preCameraStream.getTracks().forEach(t => t.stop());
+    _preCameraStream = null;
   }
 }
 
@@ -627,6 +656,7 @@ function openARFromAdmin() {
 }
 
 function closeARScanner() {
+  stopPreCameraStream();
   const scene = document.getElementById('ar-scene-el');
   if (scene) {
     try {
@@ -635,12 +665,6 @@ function closeARScanner() {
     } catch(e) {}
     document.querySelectorAll('#ar-scene-wrap video').forEach(v => { v.pause(); v.src=''; });
   }
-  // Reset landscape
-  _ls = false;
-  document.getElementById('ar-screen').classList.remove('ls');
-  const lb = document.getElementById('ar-ls-btn');
-  if (lb) { lb.classList.remove('on'); lb.textContent = '⤢'; }
-
   _activeVideos = new Set();
   _arMuted = true;
   document.getElementById('ar-scene-wrap').innerHTML = '';
@@ -1092,6 +1116,9 @@ async function buildARScene(targets) {
   const scene = document.getElementById('ar-scene-el');
 
   scene.addEventListener('loaded', () => {
+    // Release our pre-grabbed stream — MindAR will now take over the camera
+    stopPreCameraStream();
+
     document.getElementById('ar-loading').style.display = 'none';
     setARStatus('Point at a target image...');
     const sys = scene.systems && scene.systems['mindar-image-system'];
@@ -1154,15 +1181,6 @@ function loadImgFromUrl(url) {
 }
 
 function setARStatus(t) { document.getElementById('ar-status').textContent = t; }
-
-let _ls = false;
-function toggleLS() {
-  _ls = !_ls;
-  const s = document.getElementById('ar-screen');
-  const b = document.getElementById('ar-ls-btn');
-  if (_ls) { s.classList.add('ls');  b.classList.add('on'); b.textContent='⤡'; }
-  else      { s.classList.remove('ls'); b.classList.remove('on'); b.textContent='⤢'; }
-}
 
 // ── Sound control ──────────────────────────────
 let _arMuted = true;          // starts muted (browser requirement)
