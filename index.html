@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
-<title>AR Magic v18d</title>
+<title>AR Magic Library</title>
 <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
 <style>
@@ -189,7 +189,7 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
     <span class="scan-icon">📷</span>
     <span class="scan-label">Scan</span>
   </button>
-  <p class="guest-hint">Tap the button above to open the camera<br>Then point it at any target image</p><p style="position:fixed;bottom:4px;left:50%;transform:translateX(-50%);font-size:9px;color:rgba(255,255,255,.2);font-family:monospace;">v18d</p>
+  <p class="guest-hint">Tap the button above to open the camera<br>Then point it at any target image</p>
 </div>
 
 <!-- INVISIBLE ADMIN TAP ZONE (triple-tap top-right) -->
@@ -345,7 +345,21 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
 
 <script>
 'use strict';
-console.log('=== AR Magic v18d loaded ===');
+console.log('=== AR Magic v18e ===');
+
+// ── AR STABILISER (double-smoothing: lerp pos + slerp rot) ──
+AFRAME.registerComponent('ar-stabilizer', {
+  schema:{alpha:{type:'number',default:0.2}},
+  init:function(){this.sp=new THREE.Vector3();this.sq=new THREE.Quaternion();this.rdy=false;},
+  tick:function(){
+    const o=this.el.object3D;
+    if(!o.visible){this.rdy=false;return;}
+    if(!this.rdy){this.sp.copy(o.position);this.sq.copy(o.quaternion);this.rdy=true;return;}
+    const a=this.data.alpha;
+    this.sp.lerp(o.position,a);this.sq.slerp(o.quaternion,a);
+    o.position.copy(this.sp);o.quaternion.copy(this.sq);
+  }
+});
 
 // ── CONFIG ──
 const BUCKET = 'ar-assets';
@@ -629,14 +643,34 @@ async function saveEdit() {
 // ── AR SCANNER ──
 function openARFromAdmin() { startARScanner(); }
 
-// Stage 1: User taps SCAN — show camera permission button immediately
+// ── PROGRESS BAR (time-based, 35s) ──
+let _progressTimer = null, _progressPct = 0;
+function startProgressBar() {
+  _progressPct = 0;
+  const bar = document.getElementById('ar-load-bar');
+  const wrap = document.getElementById('ar-load-bar-wrap');
+  if (wrap) wrap.style.display = 'block';
+  if (bar) { bar.style.transition = 'none'; bar.style.width = '0%'; }
+  clearInterval(_progressTimer);
+  _progressTimer = setInterval(() => {
+    _progressPct += 1;
+    if (_progressPct >= 99) { _progressPct = 99; clearInterval(_progressTimer); }
+    if (bar) { bar.style.transition = 'width .35s linear'; bar.style.width = _progressPct + '%'; }
+  }, 350);
+}
+function finishProgressBar() {
+  clearInterval(_progressTimer);
+  const bar = document.getElementById('ar-load-bar');
+  if (bar) { bar.style.transition = 'width .4s ease'; bar.style.width = '100%'; }
+}
+
+// Stage 1: show Allow Camera button (keeps iOS gesture chain alive)
 function startARScanner() {
   if (!SB_URL || !SB_KEY) { toast('AR not configured yet.','warn'); return; }
   document.getElementById('ar-screen').classList.add('show');
   document.getElementById('ar-loading').style.display = 'flex';
   document.getElementById('ar-load-title').textContent = 'Camera Access';
   document.getElementById('ar-load-detail').textContent = 'Tap below to allow camera';
-  // Show a big tap button — this keeps iOS gesture chain alive
   const btn = document.createElement('button');
   btn.id = 'cam-permit-btn';
   btn.textContent = '📷 Allow Camera';
@@ -645,21 +679,17 @@ function startARScanner() {
   document.getElementById('ar-loading').appendChild(btn);
 }
 
-// Stage 2: Called directly by user tap — iOS accepts this as a valid gesture
+// Stage 2: called directly by tap — iOS shows permission dialog
 async function requestCameraThenBuild() {
   const btn = document.getElementById('cam-permit-btn');
   if (btn) btn.remove();
   document.getElementById('ar-load-title').textContent = 'Loading Targets';
   document.getElementById('ar-load-detail').textContent = 'Please wait...';
   try {
-    // Ask for camera permission NOW while still in gesture chain
-    // This is what iOS requires to show the permission dialog
     const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode:'environment' } });
-    // Permission granted — stop this stream and wait for iOS to fully release camera
     stream.getTracks().forEach(t => t.stop());
-    startProgressBar(); // start smooth 35s bar now
+    startProgressBar();
     await new Promise(r => setTimeout(r, 1500));
-
     const targets = await dbFetch();
     const ready = targets.filter(t => t.mind_url && t.video_url);
     if (!ready.length) { toast('No AR targets available yet.','warn'); document.getElementById('ar-screen').classList.remove('show'); return; }
@@ -671,77 +701,34 @@ async function requestCameraThenBuild() {
   }
 }
 
-// ── ANIMATED PROGRESS BAR (time-based, 35s 0→100%) ──
-let _progressTimer = null;
-let _progressPct = 0;
-
-function startProgressBar() {
-  _progressPct = 0;
-  const bar = document.getElementById('ar-load-bar');
-  const wrap = document.getElementById('ar-load-bar-wrap');
-  if (wrap) wrap.style.display = 'block';
-  if (bar) bar.style.transition = 'none';
-  if (bar) bar.style.width = '0%';
-
-  clearInterval(_progressTimer);
-  // Tick every 350ms → 100 ticks over 35s = 1% per tick
-  _progressTimer = setInterval(() => {
-    _progressPct += 1;
-    if (_progressPct >= 99) { _progressPct = 99; clearInterval(_progressTimer); }
-    if (bar) { bar.style.transition = 'width .35s linear'; bar.style.width = _progressPct + '%'; }
-  }, 350);
-}
-
-function finishProgressBar() {
-  clearInterval(_progressTimer);
-  const bar = document.getElementById('ar-load-bar');
-  if (bar) { bar.style.transition = 'width .4s ease'; bar.style.width = '100%'; }
-}
-
-function setARProgress(pct, title, detail, tip) {
-  if (title) document.getElementById('ar-load-title').textContent = title;
-  if (detail) document.getElementById('ar-load-detail').textContent = detail;
-  const tipEl = document.getElementById('ar-load-tip');
-  if (tipEl) { tipEl.style.display = tip ? 'block' : 'none'; if (tip) tipEl.textContent = tip; }
-}
-
 async function buildARScene(targets) {
   const wrap = document.getElementById('ar-scene-wrap');
   wrap.innerHTML = '';
 
-  const tips = [
-    'Hold the image flat and steady for best results',
-    'Good lighting improves scan accuracy',
-    'Point camera directly at the full image',
-    'Works best on printed or screen images',
-  ];
-  const tip = tips[Math.floor(Math.random() * tips.length)];
+  const tips = ['Hold the image flat and steady','Good lighting helps accuracy','Point camera at the full image','Works best on printed images'];
+  const tip = tips[Math.floor(Math.random()*tips.length)];
+  const tipEl = document.getElementById('ar-load-tip');
+  if (tipEl) { tipEl.style.display='block'; tipEl.textContent='💡 Tip: '+tip; }
 
   const images = [], aspects = [];
   for (let i = 0; i < targets.length; i++) {
-    const pct = 5 + (i / targets.length) * 15;
-    setARProgress(pct, 'Loading Images', `Image ${i+1} of ${targets.length}...`, tip);
+    document.getElementById('ar-load-title').textContent = 'Loading Images';
+    document.getElementById('ar-load-detail').textContent = `Image ${i+1} of ${targets.length}...`;
     const img = await loadImg(targets[i].image_url);
     images.push(img);
     aspects.push(img.naturalHeight / img.naturalWidth);
   }
 
-  setARProgress(20, 'Building Tracker', 'Analysing image features...', tip);
+  document.getElementById('ar-load-title').textContent = 'Building Tracker';
   const compiler = new window.MINDAR.IMAGE.Compiler();
   await compiler.compileImageTargets(images, p => {
-    const pct = 20 + Math.round(p * 65);
-    const secs = Math.round((1 - p) * 20);
-    setARProgress(pct,
-      'Building Tracker',
-      `Processing... ${Math.round(p * 100)}%${secs > 2 ? ' (~' + secs + 's left)' : ''}`,
-      tip
-    );
+    const secs = Math.round((1-p)*20);
+    document.getElementById('ar-load-detail').textContent = `Processing... ${Math.round(p*100)}%${secs>2?' (~'+secs+'s left)':''}`;
   });
-
-  setARProgress(88, 'Almost Ready', 'Preparing AR scene...', tip);
   const mindBuffer = await compiler.exportData();
   const mindUrl = URL.createObjectURL(new Blob([mindBuffer], {type:'application/octet-stream'}));
-  setARProgress(92, 'Starting Camera', 'Opening camera...', null);
+  document.getElementById('ar-load-title').textContent = 'Starting Camera';
+  document.getElementById('ar-load-detail').textContent = 'Opening camera...';
 
   const assetsHtml = targets.map((t,i) =>
     `<video id="arvid${i}" src="${t.video_url}" playsinline webkit-playsinline muted loop crossorigin="anonymous" preload="auto"></video>`
@@ -749,14 +736,14 @@ async function buildARScene(targets) {
 
   const entitiesHtml = targets.map((t,i) => {
     const h = (aspects[i] || 0.5625).toFixed(4);
-    return `<a-entity id="artgt${i}" mindar-image-target="targetIndex:${i}">
+    return `<a-entity id="artgt${i}" mindar-image-target="targetIndex:${i}" ar-stabilizer="alpha:0.2">
       <a-video id="arpl${i}" src="#arvid${i}" position="0 0 0.001" width="1" height="${h}" visible="false" material="shader:flat;side:double;"></a-video>
     </a-entity>`;
   }).join('');
 
   wrap.innerHTML = `
     <a-scene id="ar-scene-el"
-      mindar-image="imageTargetSrc:${mindUrl};autoStart:false;uiLoading:none;uiScanning:none;uiError:none;filterMinCF:0.0001;filterBeta:1000;warmupTolerance:3;missTolerance:10;"
+      mindar-image="imageTargetSrc:${mindUrl};autoStart:false;uiLoading:none;uiScanning:none;uiError:none;filterMinCF:0.00001;filterBeta:0.01;warmupTolerance:3;missTolerance:10;"
       color-space="sRGB"
       renderer="colorManagement:true;physicallyCorrectLights:true;antialias:true;"
       vr-mode-ui="enabled:false"
@@ -769,23 +756,19 @@ async function buildARScene(targets) {
 
   const scene = document.getElementById('ar-scene-el');
 
-  scene.addEventListener('arError', (e) => {
+  scene.addEventListener('arError', () => {
     document.getElementById('ar-loading').style.display = 'none';
-    toast('AR failed to start. Close and try again.', 'error');
-    console.error('arError', e);
+    toast('AR failed to start. Please try again.', 'error');
   });
 
   scene.addEventListener('arReady', () => {
     finishProgressBar();
-    setARProgress(100, 'Ready! 🎯', 'Point at a target image', null);
-    setTimeout(() => {
-      document.getElementById('ar-loading').style.display = 'none';
-      setARStatus('Point at a target image...');
-    }, 400);
+    document.getElementById('ar-load-title').textContent = 'Ready! 🎯';
+    document.getElementById('ar-load-detail').textContent = 'Point at a target image';
+    setTimeout(() => { document.getElementById('ar-loading').style.display = 'none'; setARStatus('Point at a target image...'); }, 400);
   });
 
   scene.addEventListener('loaded', () => {
-    setARProgress(98, 'Starting Camera', 'Opening camera...', null);
     document.getElementById('ar-loading').style.display = 'none';
     setARStatus('Point at a target image...');
     const sys = scene.systems && scene.systems['mindar-image-system'];
