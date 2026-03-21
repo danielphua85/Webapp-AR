@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
-<title>AR Magic v18b</title>
+<title>AR Magic v18c</title>
 <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
 <style>
@@ -189,7 +189,7 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
     <span class="scan-icon">📷</span>
     <span class="scan-label">Scan</span>
   </button>
-  <p class="guest-hint">Tap the button above to open the camera<br>Then point it at any target image</p><p style="position:fixed;bottom:4px;left:50%;transform:translateX(-50%);font-size:9px;color:rgba(255,255,255,.2);font-family:monospace;">v18b</p>
+  <p class="guest-hint">Tap the button above to open the camera<br>Then point it at any target image</p><p style="position:fixed;bottom:4px;left:50%;transform:translateX(-50%);font-size:9px;color:rgba(255,255,255,.2);font-family:monospace;">v18c</p>
 </div>
 
 <!-- INVISIBLE ADMIN TAP ZONE (triple-tap top-right) -->
@@ -320,6 +320,10 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
     <div class="ar-spinner"></div>
     <div class="ar-load-title" id="ar-load-title">Loading AR Engine</div>
     <div id="ar-load-detail">Preparing...</div>
+    <div id="ar-load-bar-wrap" style="width:240px;height:4px;background:rgba(255,255,255,.1);border-radius:4px;margin-top:16px;overflow:hidden;display:none;">
+      <div id="ar-load-bar" style="height:100%;width:0%;background:linear-gradient(90deg,#22d3ee,#6c63ff);border-radius:4px;transition:width .4s ease;"></div>
+    </div>
+    <div id="ar-load-tip" style="font-size:11px;color:rgba(255,255,255,.3);margin-top:10px;text-align:center;max-width:240px;line-height:1.6;display:none;"></div>
   </div>
   <div id="ar-hud">
     <div class="arc tl"></div><div class="arc tr"></div>
@@ -341,7 +345,7 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
 
 <script>
 'use strict';
-console.log('=== AR Magic v18b loaded ===');
+console.log('=== AR Magic v18c loaded ===');
 
 // ── CONFIG ──
 const BUCKET = 'ar-assets';
@@ -666,28 +670,53 @@ async function requestCameraThenBuild() {
   }
 }
 
+function setARProgress(pct, title, detail, tip) {
+  const bar = document.getElementById('ar-load-bar');
+  const wrap = document.getElementById('ar-load-bar-wrap');
+  const tipEl = document.getElementById('ar-load-tip');
+  if (bar) { wrap.style.display = 'block'; bar.style.width = pct + '%'; }
+  if (title) document.getElementById('ar-load-title').textContent = title;
+  if (detail) document.getElementById('ar-load-detail').textContent = detail;
+  if (tipEl) { tipEl.style.display = tip ? 'block' : 'none'; if (tip) tipEl.textContent = tip; }
+}
+
 async function buildARScene(targets) {
   const wrap = document.getElementById('ar-scene-wrap');
   wrap.innerHTML = '';
 
+  const tips = [
+    'Hold the image flat and steady for best results',
+    'Good lighting improves scan accuracy',
+    'Point camera directly at the full image',
+    'Works best on printed or screen images',
+  ];
+  const tip = tips[Math.floor(Math.random() * tips.length)];
+
   const images = [], aspects = [];
   for (let i = 0; i < targets.length; i++) {
-    document.getElementById('ar-load-detail').textContent = `Loading image ${i+1}/${targets.length}...`;
+    const pct = 5 + (i / targets.length) * 15;
+    setARProgress(pct, 'Loading Images', `Image ${i+1} of ${targets.length}...`, tip);
     const img = await loadImg(targets[i].image_url);
     images.push(img);
     aspects.push(img.naturalHeight / img.naturalWidth);
   }
 
-  document.getElementById('ar-load-title').textContent = 'Building Tracker';
+  setARProgress(20, 'Building Tracker', 'Analysing image features...', tip);
   const compiler = new window.MINDAR.IMAGE.Compiler();
   await compiler.compileImageTargets(images, p => {
-    document.getElementById('ar-load-detail').textContent = `Compiling... ${Math.round(p * 100)}%`;
+    const pct = 20 + Math.round(p * 65);
+    const secs = Math.round((1 - p) * 20);
+    setARProgress(pct,
+      'Building Tracker',
+      `Processing... ${Math.round(p * 100)}%${secs > 2 ? ' (~' + secs + 's left)' : ''}`,
+      tip
+    );
   });
+
+  setARProgress(88, 'Almost Ready', 'Preparing AR scene...', tip);
   const mindBuffer = await compiler.exportData();
   const mindUrl = URL.createObjectURL(new Blob([mindBuffer], {type:'application/octet-stream'}));
-
-  document.getElementById('ar-load-title').textContent = 'Starting Camera';
-  document.getElementById('ar-load-detail').textContent = 'Almost ready...';
+  setARProgress(92, 'Starting Camera', 'Opening camera...', null);
 
   const assetsHtml = targets.map((t,i) =>
     `<video id="arvid${i}" src="${t.video_url}" playsinline webkit-playsinline muted loop crossorigin="anonymous" preload="auto"></video>`
@@ -722,11 +751,15 @@ async function buildARScene(targets) {
   });
 
   scene.addEventListener('arReady', () => {
-    document.getElementById('ar-loading').style.display = 'none';
-    setARStatus('Point at a target image...');
+    setARProgress(100, 'Ready!', 'Point at a target image', null);
+    setTimeout(() => {
+      document.getElementById('ar-loading').style.display = 'none';
+      setARStatus('Point at a target image...');
+    }, 400);
   });
 
   scene.addEventListener('loaded', () => {
+    setARProgress(98, 'Starting Camera', 'Opening camera...', null);
     document.getElementById('ar-loading').style.display = 'none';
     setARStatus('Point at a target image...');
     const sys = scene.systems && scene.systems['mindar-image-system'];
