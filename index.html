@@ -272,6 +272,24 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
 @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
 #ar-close{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);color:#fff;font-size:13px;padding:6px 14px;border-radius:8px;cursor:pointer;font-family:inherit;font-weight:600;transition:background .2s;}
 #ar-close:hover{background:rgba(255,255,255,.22);}
+#ar-sound-btn{
+  background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);
+  color:#fff;font-size:18px;width:38px;height:38px;border-radius:8px;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:all .2s;flex-shrink:0;
+}
+#ar-sound-btn:hover{background:rgba(255,255,255,.22);}
+#ar-sound-btn.unmuted{background:rgba(34,211,238,.2);border-color:rgba(34,211,238,.5);}
+/* Muted hint banner — fades in then out */
+#ar-mute-hint{
+  position:absolute;top:70px;left:50%;transform:translateX(-50%);
+  background:rgba(0,0,0,.75);color:rgba(255,255,255,.85);
+  font-size:12px;font-family:'Space Grotesk',sans-serif;
+  padding:8px 16px;border-radius:20px;white-space:nowrap;
+  z-index:8300;pointer-events:none;
+  animation:hint-fade 4s ease forwards;
+}
+@keyframes hint-fade{0%{opacity:0}10%{opacity:1}70%{opacity:1}100%{opacity:0}}
 
 #ar-scene-wrap{flex:1;position:relative;}
 #ar-scene-wrap a-scene{width:100%!important;height:100%!important;}
@@ -519,7 +537,10 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
   </div>
   <div id="ar-topbar">
     <div class="ar-live-label"><div class="ar-dot"></div>AR LIVE</div>
-    <button id="ar-close" onclick="closeARScanner()">✕ Close</button>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <button id="ar-sound-btn" onclick="toggleARSound()" title="Toggle sound">🔇</button>
+      <button id="ar-close" onclick="closeARScanner()">✕ Close</button>
+    </div>
   </div>
   <div id="ar-scene-wrap"></div>
   <div id="ar-bottombar">
@@ -599,10 +620,14 @@ function closeARScanner() {
     } catch(e) {}
     document.querySelectorAll('#ar-scene-wrap video').forEach(v => { v.pause(); v.src=''; });
   }
+  _activeVideos = new Set();
+  _arMuted = true;
   document.getElementById('ar-scene-wrap').innerHTML = '';
   document.getElementById('ar-screen').classList.remove('show');
   document.getElementById('ar-loading').style.display = 'flex';
   document.getElementById('ar-badge').classList.remove('show');
+  const old = document.getElementById('ar-mute-hint');
+  if (old) old.remove();
 }
 
 // ════════════════════════════════
@@ -1039,6 +1064,13 @@ async function buildARScene(targets) {
     const sys = scene.systems && scene.systems['mindar-image-system'];
     if (sys) try { sys.start(); } catch(e) {}
 
+    // Reset sound state for this session
+    _arMuted = true;
+    _activeVideos = new Set();
+    const sndBtn = document.getElementById('ar-sound-btn');
+    if (sndBtn) { sndBtn.textContent = '🔇'; sndBtn.classList.remove('unmuted'); }
+    setTimeout(showMuteHint, 1200);
+
     targets.forEach((target, i) => {
       const ent   = document.getElementById(`artgt${i}`);
       const vidEl = document.getElementById(`arvid${i}`);
@@ -1050,15 +1082,25 @@ async function buildARScene(targets) {
         showARBadge(`🎯 ${target.name.toUpperCase()}`);
         if (plEl) plEl.setAttribute('visible','true');
         if (vidEl) {
+          // Always start muted (browser autoplay requirement)
           vidEl.muted = true;
           const p = vidEl.play();
-          if (p) p.catch(() => document.addEventListener('touchstart', () => vidEl.play(), {once:true}));
+          if (p) p.catch(() => {});
+          // After play starts, apply current sound state
+          setTimeout(() => {
+            vidEl.muted = _arMuted;
+          }, 300);
+          _activeVideos.add(vidEl);
         }
       });
       ent.addEventListener('targetLost', () => {
         setARStatus('Point at a target image...');
         if (plEl) plEl.setAttribute('visible','false');
-        if (vidEl) { vidEl.pause(); vidEl.currentTime = 0; }
+        if (vidEl) {
+          vidEl.pause();
+          vidEl.currentTime = 0;
+          _activeVideos.delete(vidEl);
+        }
       });
     });
   });
@@ -1079,6 +1121,50 @@ function loadImgFromUrl(url) {
 }
 
 function setARStatus(t) { document.getElementById('ar-status').textContent = t; }
+
+// ── Sound control ──────────────────────────────
+let _arMuted = true;          // starts muted (browser requirement)
+let _activeVideos = new Set(); // tracks currently playing videos
+
+function toggleARSound() {
+  _arMuted = !_arMuted;
+  const btn = document.getElementById('ar-sound-btn');
+
+  // Apply to all active (playing) videos
+  _activeVideos.forEach(v => {
+    v.muted = _arMuted;
+  });
+
+  // Also apply to all AR videos in case any are loaded
+  document.querySelectorAll('#ar-scene-wrap video').forEach(v => {
+    v.muted = _arMuted;
+  });
+
+  if (_arMuted) {
+    btn.textContent = '🔇';
+    btn.classList.remove('unmuted');
+    setARStatus('Sound OFF — tap 🔇 to turn on');
+  } else {
+    btn.textContent = '🔊';
+    btn.classList.add('unmuted');
+    setARStatus('Sound ON — point at a target image...');
+  }
+  // Clear status after 2s
+  setTimeout(() => setARStatus(
+    _activeVideos.size ? 'Playing...' : 'Point at a target image...'
+  ), 2000);
+}
+
+function showMuteHint() {
+  // Remove any existing hint
+  const old = document.getElementById('ar-mute-hint');
+  if (old) old.remove();
+  const hint = document.createElement('div');
+  hint.id = 'ar-mute-hint';
+  hint.textContent = '🔇 Tap the sound button to unmute';
+  document.getElementById('ar-hud').appendChild(hint);
+  setTimeout(() => { if (hint.parentNode) hint.remove(); }, 4200);
+}
 
 let _badgeTimer;
 function showARBadge(text) {
