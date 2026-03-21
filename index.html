@@ -1041,15 +1041,27 @@ async function buildARScene(targets) {
   const entitiesHtml = targets.map((t,i) => {
     const h = (aspects[i] || 0.5625).toFixed(4);
     return `<a-entity id="artgt${i}" mindar-image-target="targetIndex:${i}">
-      <a-video id="arpl${i}" src="#arvid${i}" position="0 0 0.001" width="1" height="${h}" visible="false"></a-video>
+      <a-video id="arpl${i}" src="#arvid${i}" position="0 0 0.001" width="1" height="${h}" visible="false"
+        material="shader:flat; side:double;"
+      ></a-video>
     </a-entity>`;
   }).join('');
 
   wrap.innerHTML = `
     <a-scene id="ar-scene-el"
-      mindar-image="imageTargetSrc:${mindUrl};autoStart:false;uiLoading:none;uiScanning:none;uiError:none;filterMinCF:0.001;filterBeta:100;"
-      color-space="sRGB" renderer="colorManagement:true;physicallyCorrectLights:true;"
-      vr-mode-ui="enabled:false" device-orientation-permission-ui="enabled:false"
+      mindar-image="imageTargetSrc:${mindUrl};
+        autoStart:false;
+        uiLoading:none;
+        uiScanning:none;
+        uiError:none;
+        filterMinCF:0.0001;
+        filterBeta:1000;
+        warmupTolerance:3;
+        missTolerance:10;"
+      color-space="sRGB"
+      renderer="colorManagement:true; physicallyCorrectLights:true; antialias:true;"
+      vr-mode-ui="enabled:false"
+      device-orientation-permission-ui="enabled:false"
       embedded style="width:100%;height:100%;">
       <a-assets timeout="30000">${assetsHtml}</a-assets>
       <a-camera position="0 0 0" look-controls="enabled:false"></a-camera>
