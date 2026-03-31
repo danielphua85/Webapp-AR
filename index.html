@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
-<title>AR Magic v24</title>
+<title>AR Magic Library v24</title>
 <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
 <style>
@@ -254,7 +254,7 @@ transition:all .25s;position:relative;box-shadow:0 0 40px rgba(34,211,238,.2);
     <!-- UPLOAD TAB -->
     <div class="tab-panel active" id="panel-upload">
       <div class="section-title">✦ Add New AR Target</div>
-      <div class="section-sub">Upload image + video. AR tracking compiles automatically when scanning.</div>
+      <div class="section-sub">Upload image + video. AR tracking compiles when scanning.</div>
       <div class="upload-card">
         <h3>① Target Name</h3>
         <div class="field" style="margin-bottom:0"><input id="target-name" type="text" placeholder="e.g. Exercise Card 1..." style="background:var(--bg);font-size:15px;"/></div>
@@ -290,7 +290,6 @@ transition:all .25s;position:relative;box-shadow:0 0 40px rgba(34,211,238,.2);
         <div class="progress-bar-wrap"><div class="progress-bar" id="progress-bar"></div></div>
         <div class="progress-pct" id="progress-pct">0%</div>
       </div>
-      <div id="upload-error-msg" style="display:none;background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.4);border-radius:10px;padding:12px;font-size:12px;color:#ef4444;margin-bottom:12px;word-break:break-all;line-height:1.6;"></div>
       <button class="btn btn-primary" id="upload-btn" style="width:100%;padding:14px;font-size:15px;margin-top:4px;" onclick="uploadTarget()">
         🚀 Save to Library
       </button>
@@ -330,7 +329,6 @@ transition:all .25s;position:relative;box-shadow:0 0 40px rgba(34,211,238,.2);
     <div class="ar-spinner"></div>
     <div class="ar-load-title" id="ar-load-title">Loading AR Engine</div>
     <div id="ar-load-detail">Preparing...</div>
-    <div id="ar-progress-wrap" style="width:240px;height:4px;background:rgba(255,255,255,.1);border-radius:4px;margin-top:16px;overflow:hidden;display:none;"><div id="ar-progress-bar" style="height:100%;width:0%;background:linear-gradient(90deg,#22d3ee,#6c63ff);border-radius:4px;"></div></div>
   </div>
   <div id="ar-hud">
     <div class="arc tl"></div><div class="arc tr"></div>
@@ -353,7 +351,6 @@ transition:all .25s;position:relative;box-shadow:0 0 40px rgba(34,211,238,.2);
 <script>
 'use strict';
 console.log('AR Magic v24');
-AFRAME.registerComponent('ar-stabilizer',{schema:{alpha:{type:'number',default:0.2}},init:function(){this.sp=new THREE.Vector3();this.sq=new THREE.Quaternion();this.rdy=false;},tick:function(){const o=this.el.object3D;if(!o.visible){this.rdy=false;return;}if(!this.rdy){this.sp.copy(o.position);this.sq.copy(o.quaternion);this.rdy=true;return;}const a=this.data.alpha;this.sp.lerp(o.position,a);this.sq.slerp(o.quaternion,a);o.position.copy(this.sp);o.quaternion.copy(this.sq);}});
 
 // ── CONFIG ──
 const BUCKET = 'ar-assets';
@@ -488,9 +485,8 @@ function showUploadProgress(show, label, pct) {
   if (!show) { el.classList.remove('show'); return; }
   el.classList.add('show');
   document.getElementById('compile-label').textContent = label;
-  const safePct = Math.min(100, Math.max(0, pct));
-  document.getElementById('progress-bar').style.width = safePct + '%';
-  document.getElementById('progress-pct').textContent = Math.round(safePct) + '%';
+  document.getElementById('progress-bar').style.width = pct + '%';
+  document.getElementById('progress-pct').textContent = Math.round(pct) + '%';
 }
 
 async function uploadTarget() {
@@ -500,48 +496,27 @@ async function uploadTarget() {
   if (!vidFile) { toast('Select a video', 'error'); return; }
   const btn = document.getElementById('upload-btn');
   btn.disabled = true; btn.textContent = '⏳ Uploading...';
-  const errDiv = document.getElementById('upload-error-msg');
-  if (errDiv) errDiv.style.display = 'none';
   try {
-    // Step 1: Upload image
-    showUploadProgress(true, 'Uploading image... (1/2)', 15);
-    await new Promise(r => setTimeout(r, 300));
+    showUploadProgress(true, 'Uploading image...', 20);
     const imgUrl = await uploadFile(imgFile, `images/${Date.now()}_${clean(imgFile.name)}`);
-    showUploadProgress(true, 'Image uploaded ✓', 45);
-    await new Promise(r => setTimeout(r, 200));
-
-    // Step 2: Upload video
-    showUploadProgress(true, 'Uploading video... (2/2)', 55);
-    await new Promise(r => setTimeout(r, 300));
+    showUploadProgress(true, 'Uploading video...', 60);
     const vidUrl = await uploadFile(vidFile, `videos/${Date.now()}_${clean(vidFile.name)}`);
-    showUploadProgress(true, 'Video uploaded ✓', 85);
-    await new Promise(r => setTimeout(r, 200));
-
-    // Step 3: Save to database
-    showUploadProgress(true, 'Saving to library...', 93);
-    await dbInsert({ name, image_url: imgUrl, video_url: vidUrl, mind_url: '' });
-
-    showUploadProgress(true, '✓ All done!', 100);
-    setTimeout(() => showUploadProgress(false), 2000);
-    toast('✓ Saved to library!', 'success');
+    showUploadProgress(true, 'Saving to library...', 90);
+    await dbInsert({ name, image_url:imgUrl, video_url:vidUrl, mind_url:'' });
+    showUploadProgress(true, '✓ Saved!', 100);
+    setTimeout(() => showUploadProgress(false), 1500);
+    toast('✓ Saved! Tap Library to view.', 'success');
     document.getElementById('target-name').value = '';
     clearImage(); clearVideo();
-    // Auto-switch to Library so user can see it
-    setTimeout(() => switchTab('library'), 2500);
-
   } catch(e) {
-    console.error('Upload error:', e);
-    if (errDiv) {
-      errDiv.textContent = '❌ ' + e.message;
-      errDiv.style.display = 'block';
-    }
-    toast('Upload failed: ' + e.message, 'error');
+    toast('Upload error: ' + e.message, 'error');
     showUploadProgress(false);
   } finally {
     btn.disabled = false;
     btn.innerHTML = '🚀 Save to Library';
   }
 }
+
 
 async function compileMindFile(imageFile, onProgress) {
   return new Promise((resolve, reject) => {
@@ -605,7 +580,7 @@ async function loadLibrary() {
   try {
     libraryData = await dbFetch();
     renderLibrary(libraryData);
-  } catch(e) { grid.innerHTML = `<div class="lib-empty"><div class="ei">⚠️</div><b>Error loading library:</b><br><small style="color:#f59e0b;word-break:break-all">${e.message}</small><br><br><small>Check your Supabase URL and anon key</small></div>`; }
+  } catch(e) { grid.innerHTML = `<div class="lib-empty"><div class="ei">⚠️</div>${e.message}</div>`; }
 }
 function renderLibrary(items) {
   const grid = document.getElementById('library-grid');
@@ -654,141 +629,63 @@ async function saveEdit() {
 // ── AR SCANNER ──
 function openARFromAdmin() { startARScanner(); }
 
-// ── PROGRESS BAR (time-based, 35s 0→100%) ──
-let _progressTimer = null, _progressPct = 0;
-function startProgressBar() {
-  _progressPct = 0;
-  const bar = document.getElementById('ar-progress-bar');
-  const wrap = document.getElementById('ar-progress-wrap');
-  if (wrap) wrap.style.display = 'block';
-  if (bar) { bar.style.transition='none'; bar.style.width='0%'; }
-  clearInterval(_progressTimer);
-  _progressTimer = setInterval(() => {
-    _progressPct = Math.min(99, _progressPct+1);
-    if (bar) { bar.style.transition='width .35s linear'; bar.style.width=_progressPct+'%'; }
-  }, 350);
-}
-function finishProgressBar() {
-  clearInterval(_progressTimer);
-  const bar = document.getElementById('ar-progress-bar');
-  if (bar) { bar.style.transition='width .4s ease'; bar.style.width='100%'; }
-}
-
-// Stage 1: show button immediately (keeps iOS gesture chain alive)
-function startARScanner() {
+async function startARScanner() {
   if (!SB_URL || !SB_KEY) { toast('AR not configured yet.','warn'); return; }
   document.getElementById('ar-screen').classList.add('show');
   document.getElementById('ar-loading').style.display = 'flex';
-  document.getElementById('ar-load-title').textContent = 'Camera Access';
-  document.getElementById('ar-load-detail').textContent = 'Tap below to allow camera';
-  const btn = document.createElement('button');
-  btn.id = 'cam-permit-btn';
-  btn.textContent = '📷 Allow Camera';
-  btn.style.cssText = 'margin-top:20px;padding:16px 36px;font-size:16px;font-weight:700;font-family:inherit;background:#22d3ee;color:#000;border:none;border-radius:14px;cursor:pointer;';
-  btn.onclick = requestCameraThenBuild;
-  document.getElementById('ar-loading').appendChild(btn);
-}
-
-// Stage 2: direct tap → iOS shows camera permission
-async function requestCameraThenBuild() {
-  const btn = document.getElementById('cam-permit-btn');
-  if (btn) btn.remove();
-  document.getElementById('ar-load-title').textContent = 'Loading Targets';
-  document.getElementById('ar-load-detail').textContent = 'Please wait...';
+  document.getElementById('ar-load-title').textContent = 'Loading AR Engine';
+  document.getElementById('ar-load-detail').textContent = 'Fetching targets...';
   try {
-    document.getElementById('ar-load-detail').textContent = 'Requesting camera access...';
-    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode:'environment' }, audio: false });
-    stream.getTracks().forEach(t => t.stop());
-    document.getElementById('ar-load-detail').textContent = 'Camera ready. Loading targets...';
-    startProgressBar();
-    await new Promise(r => setTimeout(r, 1500));
     const targets = await dbFetch();
     const ready = targets.filter(t => t.image_url && t.video_url);
     if (!ready.length) { toast('No AR targets available yet.','warn'); document.getElementById('ar-screen').classList.remove('show'); return; }
     await buildARScene(ready);
   } catch(e) {
-    const msg = e.name==='NotAllowedError' ? 'Camera denied. Go to Settings → Safari → Camera → Allow.' : 'AR Error: '+e.message;
-    toast(msg, 'error');
+    toast('AR Error: '+e.message,'error');
     document.getElementById('ar-screen').classList.remove('show');
   }
 }
 
-
-
-// Show a target picker when multiple targets exist
-function showTargetPicker(targets, callback) {
-  const loading = document.getElementById('ar-loading');
-  loading.style.display = 'flex';
+// Show picker when multiple targets exist
+function showTargetPicker(targets, cb) {
   document.getElementById('ar-load-title').textContent = 'Choose Target';
-  document.getElementById('ar-load-detail').textContent = 'Which image do you want to scan?';
-
-  // Remove old buttons
-  document.querySelectorAll('.target-pick-btn').forEach(b => b.remove());
-
+  document.getElementById('ar-load-detail').textContent = 'Which image to scan?';
+  document.querySelectorAll('.tpick-btn').forEach(b => b.remove());
   targets.forEach((t, i) => {
     const btn = document.createElement('button');
-    btn.className = 'target-pick-btn';
-    btn.style.cssText = 'display:block;width:220px;margin:6px auto;padding:10px 16px;font-size:14px;font-weight:600;font-family:inherit;background:rgba(34,211,238,.15);color:#22d3ee;border:1px solid rgba(34,211,238,.4);border-radius:10px;cursor:pointer;text-align:left;';
+    btn.className = 'tpick-btn';
+    btn.style.cssText = 'display:block;width:220px;margin:8px auto;padding:12px 16px;font-size:14px;font-weight:600;font-family:inherit;background:rgba(34,211,238,.15);color:#22d3ee;border:1px solid rgba(34,211,238,.4);border-radius:10px;cursor:pointer;';
     btn.textContent = (i+1) + '. ' + t.name;
-    btn.onclick = () => {
-      document.querySelectorAll('.target-pick-btn').forEach(b => b.remove());
-      callback(t);
-    };
-    loading.appendChild(btn);
+    btn.onclick = () => { document.querySelectorAll('.tpick-btn').forEach(b=>b.remove()); buildOneTarget(t); };
+    document.getElementById('ar-loading').appendChild(btn);
   });
 }
 
 async function buildARScene(targets) {
-  const wrap = document.getElementById('ar-scene-wrap');
-  wrap.innerHTML = '';
-
-  // If multiple targets — show picker so we scan ONE at a time
-  // This avoids the memory crash from compiling multiple images
-  let target;
-  if (targets.length === 1) {
-    target = targets[0];
-    await buildSingleTarget(target);
-  } else {
-    showTargetPicker(targets, async (chosen) => {
-      await buildSingleTarget(chosen);
-    });
+  if (targets.length > 1) {
+    showTargetPicker(targets, t => buildOneTarget(t));
+    return;
   }
+  await buildOneTarget(targets[0]);
 }
 
-async function buildSingleTarget(target) {
+async function buildOneTarget(target) {
   const wrap = document.getElementById('ar-scene-wrap');
   wrap.innerHTML = '';
-  document.getElementById('ar-load-title').textContent = 'Loading Tracker';
-  document.getElementById('ar-load-detail').textContent = 'Preparing...';
+  const targets = [target];
 
-  let mindUrl;
+  document.getElementById('ar-load-title').textContent = 'Building Tracker';
+  document.getElementById('ar-load-detail').textContent = 'Loading image...';
+  const img = await loadImg(target.image_url);
+  const aspects = [img.naturalHeight / img.naturalWidth];
 
-  if (target.mind_url && target.mind_url.endsWith('.mind')) {
-    // Use pre-compiled .mind file directly — NO compile needed!
-    document.getElementById('ar-load-detail').textContent = 'Loading tracking data...';
-    const res = await fetch(target.mind_url);
-    if (!res.ok) throw new Error('Could not load tracking file');
-    const buf = await res.arrayBuffer();
-    mindUrl = URL.createObjectURL(new Blob([buf], {type:'application/octet-stream'}));
-  } else {
-    // Old record without .mind — compile single image (fast)
-    document.getElementById('ar-load-title').textContent = 'Building Tracker';
-    const img = await loadImg(target.image_url);
-    document.getElementById('ar-load-detail').textContent = 'Compiling... 0%';
-    const compiler = new window.MINDAR.IMAGE.Compiler();
-    await compiler.compileImageTargets([img], p => {
-      document.getElementById('ar-load-detail').textContent = `Compiling... ${Math.round(p*100)}%`;
-    });
-    const buf = await compiler.exportData();
-    mindUrl = URL.createObjectURL(new Blob([buf], {type:'application/octet-stream'}));
-  }
-
-  // Aspect ratio for video plane
-  let aspect = 0.5625;
-  try { const img = await loadImg(target.image_url); aspect = img.naturalHeight / img.naturalWidth; } catch(e) {}
-
-  const targets = [target]; // wrap in array for scene builder
-  const aspects = [aspect];
+  document.getElementById('ar-load-detail').textContent = 'Compiling... 0%';
+  const compiler = new window.MINDAR.IMAGE.Compiler();
+  await compiler.compileImageTargets([img], p => {
+    document.getElementById('ar-load-detail').textContent = `Compiling... ${Math.round(p * 100)}%`;
+  });
+  const mindBuffer = await compiler.exportData();
+  const mindUrl = URL.createObjectURL(new Blob([mindBuffer], {type:'application/octet-stream'}));
 
   document.getElementById('ar-load-title').textContent = 'Starting Camera';
   document.getElementById('ar-load-detail').textContent = 'Almost ready...';
@@ -799,14 +696,14 @@ async function buildSingleTarget(target) {
 
   const entitiesHtml = targets.map((t,i) => {
     const h = (aspects[i] || 0.5625).toFixed(4);
-    return `<a-entity id="artgt${i}" mindar-image-target="targetIndex:${i}" ar-stabilizer="alpha:0.2">
+    return `<a-entity id="artgt${i}" mindar-image-target="targetIndex:${i}">
       <a-video id="arpl${i}" src="#arvid${i}" position="0 0 0.001" width="1" height="${h}" visible="false" material="shader:flat;side:double;"></a-video>
     </a-entity>`;
   }).join('');
 
   wrap.innerHTML = `
     <a-scene id="ar-scene-el"
-      mindar-image="imageTargetSrc:${mindUrl};autoStart:false;uiLoading:none;uiScanning:none;uiError:none;filterMinCF:0.00001;filterBeta:0.01;warmupTolerance:3;missTolerance:10;"
+      mindar-image="imageTargetSrc:${mindUrl};autoStart:false;uiLoading:none;uiScanning:none;uiError:none;filterMinCF:0.0001;filterBeta:1000;warmupTolerance:3;missTolerance:10;"
       color-space="sRGB"
       renderer="colorManagement:true;physicallyCorrectLights:true;antialias:true;"
       vr-mode-ui="enabled:false"
@@ -819,11 +716,8 @@ async function buildSingleTarget(target) {
 
   const scene = document.getElementById('ar-scene-el');
 
-  scene.addEventListener('arReady', () => { finishProgressBar(); });
-
   scene.addEventListener('loaded', () => {
-    finishProgressBar();
-    setTimeout(() => { document.getElementById('ar-loading').style.display = 'none'; }, 300);
+    document.getElementById('ar-loading').style.display = 'none';
     setARStatus('Point at a target image...');
     const sys = scene.systems && scene.systems['mindar-image-system'];
     if (sys) try { sys.start(); } catch(e) {}
@@ -862,6 +756,7 @@ async function buildSingleTarget(target) {
   });
 }
 
+
 function loadImg(url) {
   return new Promise((res, rej) => {
     const img = new Image();
@@ -873,7 +768,6 @@ function loadImg(url) {
 }
 
 function closeAR() {
-  clearInterval(_progressTimer);
   const scene = document.getElementById('ar-scene-el');
   if (scene) {
     try { const sys=scene.systems&&scene.systems['mindar-image-system']; if(sys&&sys.stop) sys.stop(); } catch(e) {}
