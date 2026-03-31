@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
-<title>AR Magic v21b</title>
+<title>AR Magic v22</title>
 <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
 <style>
@@ -352,7 +352,7 @@ transition:all .25s;position:relative;box-shadow:0 0 40px rgba(34,211,238,.2);
 
 <script>
 'use strict';
-console.log('AR Magic v21b');
+console.log('AR Magic v22');
 AFRAME.registerComponent('ar-stabilizer',{schema:{alpha:{type:'number',default:0.2}},init:function(){this.sp=new THREE.Vector3();this.sq=new THREE.Quaternion();this.rdy=false;},tick:function(){const o=this.el.object3D;if(!o.visible){this.rdy=false;return;}if(!this.rdy){this.sp.copy(o.position);this.sq.copy(o.quaternion);this.rdy=true;return;}const a=this.data.alpha;this.sp.lerp(o.position,a);this.sq.slerp(o.quaternion,a);o.position.copy(this.sp);o.quaternion.copy(this.sq);}});
 
 // ── CONFIG ──
@@ -734,63 +734,79 @@ async function requestCameraThenBuild() {
 }
 
 
-async function recompileFromImages(targets) {
-  const images = [];
-  for (let i = 0; i < targets.length; i++) {
-    document.getElementById('ar-load-title').textContent = 'Building Tracker';
-    document.getElementById('ar-load-detail').textContent = `Loading image ${i+1}/${targets.length}...`;
-    const img = await loadImg(targets[i].image_url);
-    images.push(img);
-  }
-  document.getElementById('ar-load-detail').textContent = 'Compiling... 0%';
-  const compiler = new window.MINDAR.IMAGE.Compiler();
-  await compiler.compileImageTargets(images, p => {
-    document.getElementById('ar-load-detail').textContent = `Compiling... ${Math.round(p*100)}%`;
+
+// Show a target picker when multiple targets exist
+function showTargetPicker(targets, callback) {
+  const loading = document.getElementById('ar-loading');
+  loading.style.display = 'flex';
+  document.getElementById('ar-load-title').textContent = 'Choose Target';
+  document.getElementById('ar-load-detail').textContent = 'Which image do you want to scan?';
+
+  // Remove old buttons
+  document.querySelectorAll('.target-pick-btn').forEach(b => b.remove());
+
+  targets.forEach((t, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'target-pick-btn';
+    btn.style.cssText = 'display:block;width:220px;margin:6px auto;padding:10px 16px;font-size:14px;font-weight:600;font-family:inherit;background:rgba(34,211,238,.15);color:#22d3ee;border:1px solid rgba(34,211,238,.4);border-radius:10px;cursor:pointer;text-align:left;';
+    btn.textContent = (i+1) + '. ' + t.name;
+    btn.onclick = () => {
+      document.querySelectorAll('.target-pick-btn').forEach(b => b.remove());
+      callback(t);
+    };
+    loading.appendChild(btn);
   });
-  const buf = await compiler.exportData();
-  return URL.createObjectURL(new Blob([buf], {type:'application/octet-stream'}));
 }
 
 async function buildARScene(targets) {
   const wrap = document.getElementById('ar-scene-wrap');
   wrap.innerHTML = '';
 
-  // Separate targets: those with real .mind files vs those needing compile
-  const hasMind = targets.filter(t => t.mind_url && t.mind_url.endsWith('.mind'));
-  const noMind  = targets.filter(t => !t.mind_url || !t.mind_url.endsWith('.mind'));
+  // If multiple targets — show picker so we scan ONE at a time
+  // This avoids the memory crash from compiling multiple images
+  let target;
+  if (targets.length === 1) {
+    target = targets[0];
+    await buildSingleTarget(target);
+  } else {
+    showTargetPicker(targets, async (chosen) => {
+      await buildSingleTarget(chosen);
+    });
+  }
+}
+
+async function buildSingleTarget(target) {
+  document.getElementById('ar-load-title').textContent = 'Loading Tracker';
+  document.getElementById('ar-load-detail').textContent = 'Preparing...';
 
   let mindUrl;
 
-  if (hasMind.length === targets.length) {
-    // ALL targets have pre-compiled .mind files — fetch and merge (no compile needed!)
-    document.getElementById('ar-load-title').textContent = 'Loading Tracker';
-    const buffers = [];
-    for (let i = 0; i < hasMind.length; i++) {
-      document.getElementById('ar-load-detail').textContent = `Loading tracker ${i+1}/${hasMind.length}...`;
-      const res = await fetch(hasMind[i].mind_url);
-      if (!res.ok) throw new Error('Failed to fetch .mind file');
-      buffers.push(await res.arrayBuffer());
-    }
-    // If only 1 target, use directly. If multiple, we still need to recompile from images
-    if (buffers.length === 1) {
-      mindUrl = URL.createObjectURL(new Blob([buffers[0]], {type:'application/octet-stream'}));
-    } else {
-      // Multiple targets: recompile (necessary for multi-target tracking)
-      mindUrl = await recompileFromImages(targets);
-    }
+  if (target.mind_url && target.mind_url.endsWith('.mind')) {
+    // Use pre-compiled .mind file directly — NO compile needed!
+    document.getElementById('ar-load-detail').textContent = 'Loading tracking data...';
+    const res = await fetch(target.mind_url);
+    if (!res.ok) throw new Error('Could not load tracking file');
+    const buf = await res.arrayBuffer();
+    mindUrl = URL.createObjectURL(new Blob([buf], {type:'application/octet-stream'}));
   } else {
-    // Some/all targets need compile from images
-    mindUrl = await recompileFromImages(targets);
+    // Old record without .mind — compile single image (fast)
+    document.getElementById('ar-load-title').textContent = 'Building Tracker';
+    const img = await loadImg(target.image_url);
+    document.getElementById('ar-load-detail').textContent = 'Compiling... 0%';
+    const compiler = new window.MINDAR.IMAGE.Compiler();
+    await compiler.compileImageTargets([img], p => {
+      document.getElementById('ar-load-detail').textContent = `Compiling... ${Math.round(p*100)}%`;
+    });
+    const buf = await compiler.exportData();
+    mindUrl = URL.createObjectURL(new Blob([buf], {type:'application/octet-stream'}));
   }
 
-  // Load aspect ratios for video sizing
-  const aspects = [];
-  for (let i = 0; i < targets.length; i++) {
-    try {
-      const img = await loadImg(targets[i].image_url);
-      aspects.push(img.naturalHeight / img.naturalWidth);
-    } catch(e) { aspects.push(0.5625); }
-  }
+  // Aspect ratio for video plane
+  let aspect = 0.5625;
+  try { const img = await loadImg(target.image_url); aspect = img.naturalHeight / img.naturalWidth; } catch(e) {}
+
+  const targets = [target]; // wrap in array for scene builder
+  const aspects = [aspect];
 
   document.getElementById('ar-load-title').textContent = 'Starting Camera';
   document.getElementById('ar-load-detail').textContent = 'Almost ready...';
