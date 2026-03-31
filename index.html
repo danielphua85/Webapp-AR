@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
-<title>AR Magic Library v25</title>
+<title>AR Magic Library v26</title>
 <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
 <style>
@@ -356,7 +356,7 @@ transition:all .25s;position:relative;box-shadow:0 0 40px rgba(34,211,238,.2);
 
 <script>
 'use strict';
-console.log('AR Magic v25');;
+console.log('AR Magic v26');;
 
 // ── CONFIG ──
 const BUCKET = 'ar-assets';
@@ -774,8 +774,13 @@ async function buildOneTarget(target) {
 
   document.getElementById('ar-load-title').textContent = 'Building Tracker';
   document.getElementById('ar-load-detail').textContent = 'Loading image...';
-  const img = await loadImg(target.image_url);
-  const aspects = [img.naturalHeight / img.naturalWidth];
+
+  // Load and downscale image to max 640px — reduces compile memory by ~80%
+  const img = await loadImgScaled(target.image_url, 640);
+  const aspects = [img.height / img.width];
+
+  // Yield to browser before heavy compile so UI stays alive
+  await new Promise(r => setTimeout(r, 100));
 
   document.getElementById('ar-load-detail').textContent = 'Compiling... 0%';
   const compiler = new window.MINDAR.IMAGE.Compiler();
@@ -862,6 +867,29 @@ function loadImg(url) {
     img.crossOrigin = 'anonymous';
     img.onload  = () => res(img);
     img.onerror = () => rej(new Error('Cannot load: ' + url));
+    img.src = url + (url.includes('?') ? '&' : '?') + '_t=' + Date.now();
+  });
+}
+
+// Load image and downscale to maxPx on longest side — reduces compile memory
+function loadImgScaled(url, maxPx) {
+  return new Promise((res, rej) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      const w = img.naturalWidth;
+      const h = img.naturalHeight;
+      const scale = Math.min(1, maxPx / Math.max(w, h));
+      const tw = Math.round(w * scale);
+      const th = Math.round(h * scale);
+      const canvas = document.createElement('canvas');
+      canvas.width  = tw;
+      canvas.height = th;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, tw, th);
+      res(canvas);
+    };
+    img.onerror = () => rej(new Error('Cannot load image'));
     img.src = url + (url.includes('?') ? '&' : '?') + '_t=' + Date.now();
   });
 }
