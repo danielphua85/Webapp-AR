@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
-<title>AR Magic v22</title>
+<title>AR Magic v23</title>
 <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
 <style>
@@ -352,7 +352,7 @@ transition:all .25s;position:relative;box-shadow:0 0 40px rgba(34,211,238,.2);
 
 <script>
 'use strict';
-console.log('AR Magic v22');
+console.log('AR Magic v23');
 AFRAME.registerComponent('ar-stabilizer',{schema:{alpha:{type:'number',default:0.2}},init:function(){this.sp=new THREE.Vector3();this.sq=new THREE.Quaternion();this.rdy=false;},tick:function(){const o=this.el.object3D;if(!o.visible){this.rdy=false;return;}if(!this.rdy){this.sp.copy(o.position);this.sq.copy(o.quaternion);this.rdy=true;return;}const a=this.data.alpha;this.sp.lerp(o.position,a);this.sq.slerp(o.quaternion,a);o.position.copy(this.sp);o.quaternion.copy(this.sq);}});
 
 // ── CONFIG ──
@@ -499,32 +499,21 @@ async function uploadTarget() {
   if (!imgFile) { toast('Select an image', 'error'); return; }
   if (!vidFile) { toast('Select a video', 'error'); return; }
   const btn = document.getElementById('upload-btn');
-  btn.disabled = true; btn.textContent = '⏳ Working...';
+  btn.disabled = true; btn.textContent = '⏳ Uploading...';
   const errDiv = document.getElementById('upload-error-msg');
   if (errDiv) errDiv.style.display = 'none';
   try {
-    // Step 1: Compile .mind for THIS image only (1 image = fast, ~5s)
-    showUploadProgress(true, 'Compiling AR tracking...', 5);
-    const mindBuffer = await compileSingleMind(imgFile, p => {
-      showUploadProgress(true, `Compiling... ${Math.round(p*100)}%`, 5 + p*55);
-    });
-
-    // Step 2: Upload image
-    showUploadProgress(true, 'Uploading image...', 65);
+    // Upload image
+    showUploadProgress(true, 'Uploading image...', 10);
     const imgUrl = await uploadFile(imgFile, `images/${Date.now()}_${clean(imgFile.name)}`);
 
-    // Step 3: Upload video
-    showUploadProgress(true, 'Uploading video...', 78);
+    // Upload video
+    showUploadProgress(true, 'Uploading video...', 55);
     const vidUrl = await uploadFile(vidFile, `videos/${Date.now()}_${clean(vidFile.name)}`);
 
-    // Step 4: Upload .mind file
-    showUploadProgress(true, 'Uploading AR data...', 88);
-    const mindFile2 = new File([new Blob([mindBuffer],{type:'application/octet-stream'})], `${Date.now()}.mind`);
-    const mindUrl = await uploadFile(mindFile2, `minds/${mindFile2.name}`);
-
-    // Step 5: Save record
-    showUploadProgress(true, 'Saving to library...', 96);
-    await dbInsert({ name, image_url: imgUrl, video_url: vidUrl, mind_url: mindUrl });
+    // Save to database (mind_url = '' — scanner compiles at scan time)
+    showUploadProgress(true, 'Saving to library...', 90);
+    await dbInsert({ name, image_url: imgUrl, video_url: vidUrl, mind_url: '' });
 
     showUploadProgress(true, '✓ Saved!', 100);
     setTimeout(() => showUploadProgress(false), 1500);
@@ -538,31 +527,12 @@ async function uploadTarget() {
       errDiv.textContent = '❌ ' + e.message;
       errDiv.style.display = 'block';
     }
-    toast('Upload failed', 'error');
+    toast('Upload failed: ' + e.message, 'error');
     showUploadProgress(false);
   } finally {
     btn.disabled = false;
     btn.innerHTML = '🚀 Save to Library';
   }
-}
-
-// Compile a SINGLE image to .mind — much lighter than multi-image compile
-async function compileSingleMind(imageFile, onProgress) {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    const url = URL.createObjectURL(imageFile);
-    img.onload = async () => {
-      URL.revokeObjectURL(url);
-      try {
-        const compiler = new window.MINDAR.IMAGE.Compiler();
-        await compiler.compileImageTargets([img], p => onProgress(p));
-        resolve(await compiler.exportData());
-      } catch(e) { reject(new Error('Compile failed: ' + e.message)); }
-    };
-    img.onerror = () => reject(new Error('Cannot load image'));
-    img.crossOrigin = 'anonymous';
-    img.src = url;
-  });
 }
 
 async function compileMindFile(imageFile, onProgress) {
@@ -723,7 +693,7 @@ async function requestCameraThenBuild() {
     startProgressBar();
     await new Promise(r => setTimeout(r, 1500));
     const targets = await dbFetch();
-    const ready = targets.filter(t => t.mind_url && t.video_url);
+    const ready = targets.filter(t => t.image_url && t.video_url);
     if (!ready.length) { toast('No AR targets available yet.','warn'); document.getElementById('ar-screen').classList.remove('show'); return; }
     await buildARScene(ready);
   } catch(e) {
