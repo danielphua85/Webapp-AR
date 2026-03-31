@@ -291,6 +291,7 @@ transition:all .25s;position:relative;box-shadow:0 0 40px rgba(34,211,238,.2);
         <div class="progress-bar-wrap"><div class="progress-bar" id="progress-bar"></div></div>
         <div class="progress-pct" id="progress-pct">0%</div>
       </div>
+      <div id="upload-error-box" style="display:none;background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.4);border-radius:10px;padding:12px 14px;font-size:13px;color:#ef4444;margin-bottom:12px;word-break:break-all;line-height:1.5;"></div>
       <button class="btn btn-primary" id="upload-btn" style="width:100%;padding:14px;font-size:15px;margin-top:4px;" onclick="uploadTarget()">
         🚀 Compile &amp; Save to Library
       </button>
@@ -355,7 +356,7 @@ transition:all .25s;position:relative;box-shadow:0 0 40px rgba(34,211,238,.2);
 
 <script>
 'use strict';
-console.log('=== AR Magic v18f ===');
+console.log('=== AR Magic v18g ===');
 
 // ── AR STABILISER (double-smoothing: lerp pos + slerp rot) ──
 AFRAME.registerComponent('ar-stabilizer', {
@@ -527,6 +528,8 @@ async function uploadTarget() {
   if (!vidFile) { toast('Select a video', 'error'); return; }
   const btn = document.getElementById('upload-btn');
   btn.disabled = true; btn.textContent = '⏳ Working...';
+  const errBox = document.getElementById('upload-error-box');
+  if (errBox) errBox.style.display = 'none';
   try {
     showUploadProgress(true, 'Analysing image...', 0);
     const mindBuffer = await compileMindFile(imgFile, p => showUploadProgress(true, 'Compiling AR data...', p * 78));
@@ -546,8 +549,15 @@ async function uploadTarget() {
     clearImage(); clearVideo();
     switchTab('library');
   } catch(e) {
-    toast('Error: ' + e.message, 'error');
     showUploadProgress(false);
+    // Show error prominently inside the panel so it can't be missed
+    const errBox = document.getElementById('upload-error-box');
+    if (errBox) {
+      errBox.textContent = '❌ ' + e.message;
+      errBox.style.display = 'block';
+      setTimeout(() => { errBox.style.display = 'none'; }, 20000);
+    }
+    toast('Upload failed: ' + e.message, 'error');
   } finally {
     btn.disabled = false;
     btn.innerHTML = '🚀 Compile &amp; Save to Library';
@@ -891,9 +901,14 @@ function showMuteHint() {
 function toast(msg, type='') {
   const wrap = document.getElementById('toast-wrap');
   const el = document.createElement('div');
-  el.className = 'toast ' + type; el.textContent = msg;
+  el.className = 'toast ' + type;
+  el.textContent = msg;
+  el.style.cursor = 'pointer';
+  el.onclick = () => el.remove();
   wrap.appendChild(el);
-  setTimeout(() => el.remove(), 3500);
+  // Errors stay 12s, others 4s
+  const dur = type === 'error' ? 12000 : 4000;
+  setTimeout(() => { if (el.parentNode) el.remove(); }, dur);
 }
 
 // ── KEYBOARD ──
