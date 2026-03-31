@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
-<title>AR Magic Library v24</title>
+<title>AR Magic Library v25</title>
 <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
 <style>
@@ -329,6 +329,12 @@ transition:all .25s;position:relative;box-shadow:0 0 40px rgba(34,211,238,.2);
     <div class="ar-spinner"></div>
     <div class="ar-load-title" id="ar-load-title">Loading AR Engine</div>
     <div id="ar-load-detail">Preparing...</div>
+  <div id="ar-prog-wrap" style="display:none;width:260px;margin-top:16px;">
+    <div style="background:rgba(255,255,255,.1);border-radius:6px;height:6px;overflow:hidden;">
+      <div id="ar-prog-bar" style="height:100%;width:0%;background:linear-gradient(90deg,#6c63ff,#22d3ee);border-radius:6px;transition:width .32s linear;"></div>
+    </div>
+    <div id="ar-prog-pct" style="font-size:11px;color:#64748b;margin-top:6px;text-align:right;font-family:'Space Mono',monospace;">0%</div>
+  </div>
   </div>
   <div id="ar-hud">
     <div class="arc tl"></div><div class="arc tr"></div>
@@ -350,7 +356,7 @@ transition:all .25s;position:relative;box-shadow:0 0 40px rgba(34,211,238,.2);
 
 <script>
 'use strict';
-console.log('AR Magic v24');
+console.log('AR Magic v25');;
 
 // ── CONFIG ──
 const BUCKET = 'ar-assets';
@@ -629,19 +635,111 @@ async function saveEdit() {
 // ── AR SCANNER ──
 function openARFromAdmin() { startARScanner(); }
 
-async function startARScanner() {
+// ── SLOW PROGRESS BAR (32s, 0→99%) ──
+let _progTimer = null;
+function startSlowBar() {
+  const bar = document.getElementById('ar-prog-bar');
+  const pct = document.getElementById('ar-prog-pct');
+  const wrap = document.getElementById('ar-prog-wrap');
+  if (wrap) wrap.style.display = 'block';
+  let p = 0;
+  clearInterval(_progTimer);
+  _progTimer = setInterval(() => {
+    p = Math.min(99, p + 1);
+    if (bar) bar.style.width = p + '%';
+    if (pct) pct.textContent = p + '%';
+  }, 320); // 320ms × 99 steps ≈ 32s
+}
+function finishBar() {
+  clearInterval(_progTimer);
+  const bar = document.getElementById('ar-prog-bar');
+  const pct = document.getElementById('ar-prog-pct');
+  if (bar) { bar.style.transition = 'width .5s ease'; bar.style.width = '100%'; }
+  if (pct) pct.textContent = '100%';
+}
+function resetBar() {
+  clearInterval(_progTimer);
+  const bar = document.getElementById('ar-prog-bar');
+  const pct = document.getElementById('ar-prog-pct');
+  const wrap = document.getElementById('ar-prog-wrap');
+  if (bar) { bar.style.transition='none'; bar.style.width='0%'; }
+  if (pct) pct.textContent = '0%';
+  if (wrap) wrap.style.display = 'none';
+}
+
+// Stage 1: show "Allow Camera" button on tap (iOS gesture requirement)
+function startARScanner() {
   if (!SB_URL || !SB_KEY) { toast('AR not configured yet.','warn'); return; }
   document.getElementById('ar-screen').classList.add('show');
   document.getElementById('ar-loading').style.display = 'flex';
-  document.getElementById('ar-load-title').textContent = 'Loading AR Engine';
-  document.getElementById('ar-load-detail').textContent = 'Fetching targets...';
+  resetBar();
+  document.getElementById('ar-load-title').textContent = 'Camera Access';
+  document.getElementById('ar-load-detail').textContent = 'Tap the button below';
+
+  // Remove old button if exists
+  const old = document.getElementById('cam-allow-btn');
+  if (old) old.remove();
+
+  // Create "Allow Camera" button — must be tapped directly for iOS permission
+  const btn = document.createElement('button');
+  btn.id = 'cam-allow-btn';
+  btn.textContent = '📷 Allow Camera';
+  btn.style.cssText = [
+    'margin-top:24px',
+    'padding:16px 40px',
+    'font-size:16px',
+    'font-weight:700',
+    'font-family:inherit',
+    'background:#22d3ee',
+    'color:#000',
+    'border:none',
+    'border-radius:14px',
+    'cursor:pointer',
+    'display:block',
+  ].join(';');
+  btn.onclick = handleCameraAllow;
+  document.getElementById('ar-loading').appendChild(btn);
+}
+
+// Stage 2: called directly from tap — iOS shows camera permission dialog
+async function handleCameraAllow() {
+  const btn = document.getElementById('cam-allow-btn');
+  if (btn) btn.remove();
+
+  document.getElementById('ar-load-title').textContent = 'Loading';
+  document.getElementById('ar-load-detail').textContent = 'Please wait...';
+  startSlowBar();
+
+  // Request camera permission immediately (must be within ms of user tap)
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
+    // Permission granted — stop this stream, MindAR will open its own
+    stream.getTracks().forEach(t => t.stop());
+    // Wait 1500ms for iOS to fully release the camera
+    await new Promise(r => setTimeout(r, 1500));
+  } catch(e) {
+    resetBar();
+    document.getElementById('ar-load-title').textContent = 'Camera Blocked';
+    document.getElementById('ar-load-detail').textContent = 'Settings → Safari → Camera → Allow';
+    document.getElementById('ar-screen').classList.remove('show');
+    toast('Camera permission denied', 'error');
+    return;
+  }
+
+  // Now fetch targets and build scene
   try {
     const targets = await dbFetch();
     const ready = targets.filter(t => t.image_url && t.video_url);
-    if (!ready.length) { toast('No AR targets available yet.','warn'); document.getElementById('ar-screen').classList.remove('show'); return; }
+    if (!ready.length) {
+      resetBar();
+      toast('No AR targets yet. Upload some first.','warn');
+      document.getElementById('ar-screen').classList.remove('show');
+      return;
+    }
     await buildARScene(ready);
   } catch(e) {
-    toast('AR Error: '+e.message,'error');
+    resetBar();
+    toast('AR Error: ' + e.message, 'error');
     document.getElementById('ar-screen').classList.remove('show');
   }
 }
@@ -717,7 +815,8 @@ async function buildOneTarget(target) {
   const scene = document.getElementById('ar-scene-el');
 
   scene.addEventListener('loaded', () => {
-    document.getElementById('ar-loading').style.display = 'none';
+    finishBar();
+    setTimeout(() => { document.getElementById('ar-loading').style.display = 'none'; }, 400);
     setARStatus('Point at a target image...');
     const sys = scene.systems && scene.systems['mindar-image-system'];
     if (sys) try { sys.start(); } catch(e) {}
@@ -768,6 +867,8 @@ function loadImg(url) {
 }
 
 function closeAR() {
+  resetBar();
+  const old = document.getElementById('cam-allow-btn'); if (old) old.remove();
   const scene = document.getElementById('ar-scene-el');
   if (scene) {
     try { const sys=scene.systems&&scene.systems['mindar-image-system']; if(sys&&sys.stop) sys.stop(); } catch(e) {}
